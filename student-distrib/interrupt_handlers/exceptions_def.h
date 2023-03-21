@@ -1,0 +1,25 @@
+#ifndef _EXCEPTIONS_DEF_H
+#define _EXCEPTIONS_DEF_H
+
+// https://wiki.osdev.org/Exceptions
+void DIVIDE_ZERO();
+void DEBUG_EXCEPTION();
+void NMI_INTERRUPT();
+void BREAKPOINT_EXCEPTION();
+void BOUND_RANGE();
+void OVERFLOW_EXCEPTION();
+void INVALID_OPCODE();
+void NOT_AVAILABLE();
+void DOUBLE_FAULT();
+void SEGMENT_OVERRUN();
+void INVALID_TSS();
+void NOT_PRESENT();
+void STACK_FAULT();
+void GENERAL_PROTECTION();
+void PAGE_FAULT();
+void MATH_FAULT();
+void ALIGNMENT_CHECK();
+void MACHINE_CHECK();
+void FLOATING_POINT();
+
+#endif

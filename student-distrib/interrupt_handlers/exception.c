@@ -41,7 +41,7 @@ const char* exception_messages[NUM_EXCEPTIONS] = {
 
 /* 
  * exception_handler
- *   DESCRIPTION: Set up the IDT.
+ *   DESCRIPTION: Handle trap exceptions.
  *   INPUTS: int_vector -- negative exception number
  *   OUTPUTS: none
  *   RETURN VALUE: none

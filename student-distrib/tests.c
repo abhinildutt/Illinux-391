@@ -154,10 +154,10 @@ int syscalls_test() {
  */
 int divide_by_zero_test() {
     TEST_HEADER;
-    int result = PASS;
+    int result = FAIL;
     int zero = 0;
     int ans = 1 / zero;
-    return result;
+    return result + ans - ans;
 }
 
 

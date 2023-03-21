@@ -8,7 +8,8 @@
 #include "i8259.h"
 #include "debug.h"
 #include "tests.h"
-#include "./interrupt_handlers/rtc.h"
+#include "interrupt_handlers/rtc.h"
+#include "interrupt_handlers/keyboard.h"
 #include "paging.h"
 
 #define RUN_TESTS

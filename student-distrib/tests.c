@@ -29,7 +29,7 @@ static inline void assertion_failure(){
  * Coverage: Load IDT, IDT definition
  * Files: x86_desc.h/S
  */
-int idt_test(){
+int idt_test() {
 	TEST_HEADER;
 
 	int i;
@@ -45,6 +45,37 @@ int idt_test(){
 	return result;
 }
 
+int exceptions_test() {
+    TEST_HEADER;
+    int result = PASS;
+    int ans = 1 / 0;
+    return result;
+}
+
+int syscalls_test() {
+    TEST_HEADER;
+    int i;
+    int ret;
+    for (i = 2; i <= 10; i++) {
+        asm volatile
+        (
+            "int $0x80"
+            : "=a" (ret)
+            : "0"(i), "b"(NULL), "c"(NULL), "d"(NULL)
+            : "memory"
+        );
+    }
+    // Test halt syscall (1) separately since it halts the program
+    asm volatile
+    (
+        "int $0x80"
+        : "=a" (ret)
+        : "0"(1), "b"(68), "c"(NULL), "d"(NULL)
+        : "memory"
+    );
+    return PASS;
+}
+
 // add more tests here
 
 /* Checkpoint 2 tests */
@@ -55,6 +86,8 @@ int idt_test(){
 
 /* Test suite entry point */
 void launch_tests(){
+    clear();
 	TEST_OUTPUT("idt_test", idt_test());
-	// launch your tests here
+	// TEST_OUTPUT("exceptions_test", exceptions_test());
+    TEST_OUTPUT("syscalls_test", syscalls_test());
 }

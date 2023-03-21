@@ -2,7 +2,14 @@
 
 extern void loadPageDirectory(int);
 extern void enablePaging();
-
+/*
+* initialize_paging
+*   DESCRIPTION: Initializes paging by setting up the page directory and page table
+*   INPUTS: none
+*   OUTPUTS: none
+*   RETURN VALUE: none
+*   SIDE EFFECTS: sets up page directory and page table
+*/
 void initialize_paging(){
 
     //set first entry in table (4mb with 4kb pages)

@@ -42,12 +42,12 @@ int32_t vidmap(uint8_t** screen_start) {
     return 0;
 }
 
-int32_t set_handler (int32_t signum, void* handler_address) {
+int32_t set_handler(int32_t signum, void* handler_address) {
     printf("syscall %s\n", __FUNCTION__);
     return 0;
 }
 
-int32_t sigreturn (void) {
+int32_t sigreturn(void) {
     printf("syscall %s\n", __FUNCTION__);
     return 0;
 }

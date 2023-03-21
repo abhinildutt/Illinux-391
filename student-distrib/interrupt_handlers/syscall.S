@@ -19,6 +19,17 @@ syscall_table:
 
 .globl syscall_handler
 
+/* 
+ * syscall_handler
+ *   DESCRIPTION: Handle a syscall interrupt and dispatch to appropriate syscall.
+ *   INPUTS: %EAX -- syscall number
+ *           %EBX -- argument 1 for syscall
+ *           %ECX -- argument 2 for syscall
+ *           %EDX -- argument 3 for syscall
+ *   OUTPUTS: none
+ *   RETURN VALUE: none
+ *   SIDE EFFECTS: performs syscall corresponding to the given syscall number
+ */
 syscall_handler:
     # syscall 0 doesn't exist
     CMPL $0, %EAX
@@ -41,6 +52,7 @@ syscall_handler:
     PUSHL %EBX
     CALL *syscall_table(, %EAX, 4)
 
+    # Restore registers
     POPL %EBX
     POPL %ECX
     POPL %EDX

@@ -1,10 +1,14 @@
 boot.o: boot.S multiboot.h x86_desc.h types.h
+paging_call.o: paging_call.S
 x86_desc.o: x86_desc.S x86_desc.h types.h
 i8259.o: i8259.c i8259.h types.h lib.h
 kernel.o: kernel.c multiboot.h types.h x86_desc.h lib.h i8259.h debug.h \
-  tests.h
+  tests.h interrupt_handlers/rtc.h interrupt_handlers/../lib.h \
+  interrupt_handlers/../i8259.h paging.h
 lib.o: lib.c lib.h types.h
-tests.o: tests.c tests.h x86_desc.h types.h lib.h
+paging.o: paging.c paging.h types.h
+tests.o: tests.c tests.h x86_desc.h types.h lib.h paging.h
+device_handlers.o: interrupt_handlers/device_handlers.S
 exceptions_def.o: interrupt_handlers/exceptions_def.S
 syscall.o: interrupt_handlers/syscall.S
 exception.o: interrupt_handlers/exception.c \
@@ -14,8 +18,15 @@ exception.o: interrupt_handlers/exception.c \
 idt.o: interrupt_handlers/idt.c interrupt_handlers/idt.h \
   interrupt_handlers/../x86_desc.h interrupt_handlers/../types.h \
   interrupt_handlers/exceptions_def.h interrupt_handlers/exception.h \
-  interrupt_handlers/syscall.h
-rtc.o: interrupt_handlers/rtc.c
+  interrupt_handlers/syscall.h interrupt_handlers/device_handlers.h \
+  interrupt_handlers/keyboard.h interrupt_handlers/rtc.h \
+  interrupt_handlers/../lib.h interrupt_handlers/../i8259.h
+keyboard.o: interrupt_handlers/keyboard.c interrupt_handlers/keyboard.h \
+  interrupt_handlers/keyboard_scancodes.h interrupt_handlers/../lib.h \
+  interrupt_handlers/../types.h interrupt_handlers/../i8259.h
+rtc.o: interrupt_handlers/rtc.c interrupt_handlers/rtc.h \
+  interrupt_handlers/../lib.h interrupt_handlers/../types.h \
+  interrupt_handlers/../i8259.h
 syscalls_def.o: interrupt_handlers/syscalls_def.c \
   interrupt_handlers/syscalls_def.h interrupt_handlers/../types.h \
   interrupt_handlers/../lib.h interrupt_handlers/../types.h

@@ -27,13 +27,11 @@ continue:
     # Load the GDT
     lgdt    gdt_desc_ptr    # loads the gdt
 
-    pushl   %eax
-    pushl   %ecx
-    pushl   %edx
+    pushal
+    pushfl
     call    setup_idt       # sets up the idt
-    popl    %edx
-    popl    %ecx
-    popl    %eax
+    popfl
+    popal
 
     lidt    idt_desc_ptr    # loads the idt
     # Load CS with the new descriptor value

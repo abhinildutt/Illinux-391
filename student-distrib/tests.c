@@ -140,7 +140,7 @@ int syscalls_test() {
         : "0"(1), "b"(68), "c"(NULL), "d"(NULL)
         : "memory"
     );
-    return PASS;
+    return FAIL;
 }
 
 /* Exception Test - Divide by Zero
@@ -172,7 +172,7 @@ int divide_by_zero_test() {
  */
 int invalid_opcode_test() {
     TEST_HEADER;
-    int result = PASS;
+    int result = FAIL;
 
     /* The instruction tries to access a non-existent control register (for example, mov cr6, eax). */
     asm volatile
@@ -197,7 +197,7 @@ int invalid_opcode_test() {
  */
 int overflow_test() {
     TEST_HEADER;
-    int result = PASS;
+    int result = FAIL;
 
     /* Create overflow instruction that will cause exception */
         
@@ -225,7 +225,7 @@ int overflow_test() {
  */
 int test_dereference_null() {
     TEST_HEADER;
-    int result = PASS;
+    int result = FAIL;
     int* ptr = NULL;
     *ptr = 0;
     return result;

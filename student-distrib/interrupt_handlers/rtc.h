@@ -2,7 +2,7 @@
 #define _RTC_H
 
 #include "../lib.h"
-#include "i8259.h"
+#include "../i8259.h"
 
 #define RTC_IRQ_NUM 8
 
@@ -15,6 +15,7 @@
 
 #define disable_NMI_A   0x8A
 #define disable_NMI_B   0x8B
+#define disable_NMI_C   0x8C
 
 void rtc_init();
 void rtc_open();
@@ -22,10 +23,5 @@ void rtc_close();
 void rtc_read();
 void rtc_write();
 void rtc_handler();
-
-
-
-
-
 
 #endif

@@ -21,7 +21,6 @@ void setup_idt() {
         idt[i].reserved0 = 0;
 
         idt[i].dpl = (i == 0x80) ? 3 : 0;     // ring 0 for kernel calls, ring 3 for syscalls
-        idt[i].present = 1;
     }
 
     // put exception handler on IDT table

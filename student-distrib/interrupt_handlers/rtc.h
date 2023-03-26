@@ -20,8 +20,10 @@
 void rtc_init();
 void rtc_open();
 void rtc_close();
-void rtc_read();
-void rtc_write();
+int32_t rtc_read(int32_t fd, void* buf, int32_t nbytes);
+int32_t rtc_write(int32_t fd, void* buf, int32_t nbytes);
 void rtc_handler();
+
+
 
 #endif

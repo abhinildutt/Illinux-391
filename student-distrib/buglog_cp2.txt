@@ -1,0 +1,32 @@
+1. rtc_read not blocking properly
+When first setting up the rtc functions and running them, we found that our rtc read was not correctly blocking
+and waiting for the next interrupt. Instead, it didn't do anything. We had a local interrupt flag and set it to 0.
+We realized we had to make a global interrupt flag that would be set in the rtc handler when an interrupt came,
+and a simple while loop for checking the state of the flag would suffice as blocking until the next interrupt.
+
+2. term_read accidentally disabling interrupts
+term read needed to disable and enable interrupts using cli() and sti(), but we forgot to add sti() at the end of 
+the function, causing interrupts to be disabled longer than necessary for the critical section. Specifically, this meant
+keyboard interrupts were not being called after reading from the terminal device. We fixed this by simply adding sti()
+
+3. Incorrect pointer arithmetic
+In filesystem init, our filesystem start address was a uint32_t * pointer. We used it to calculate the boot_block_ptr,
+inode_ptr, and data_block_ptr. We did this without casting it to a (uint8_t *) pointer which led to Incorrect
+pointer arithmetic because if you're adding BLOCK_SIZE to filesystem start address and BLOCK_SIZE is 4096 bytes, 
+then you want the pointer to be a byte pointer. This meant when testing ls, our file sizes were all incorrect
+despite our inode number being correct.
+
+4. Incorrect file size
+After fixing the pointer arithmetic, our file sizes were more accurately being displayed on the screen. For the 
+text files and rtc and "." our file sizes were accurate, but not for the larger executable files. We decided
+the separate this issue into first checking if our buffer in dir_read contained the correct values, and then
+seeing if our printing of the buffer in our test cases was the problem. That's how we found out the buffer did
+have the correct values, but we were printing only the first few bytes of the data in our test. After 
+modifying how we display our buffer for the file size, it worked.
+
+5. CAT test not working
+We couldn't display frame0.txt properly, in fact none of it was displaying when we read that file.
+In our read_data function, we calculated our curr_addr in the data block to read from as
+data_block_ptr + curr_data_block_num * BLOCK_SIZE + data_block_offset, but this was reading empty data.
+We realized this was again a case of incorrect pointer arithmetic and since we're dealing with adding
+bytes we needed to cast data_block_ptr to a char pointer, aka (uint8_t *).

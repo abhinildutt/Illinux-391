@@ -1,6 +1,14 @@
 #include "syscalls_def.h"
 #include "../lib.h"
 
+/* 
+ * halt
+ *   DESCRIPTION: Halt the system and return the status to the parent process.
+ *   INPUTS: status -- exit status
+ *   OUTPUTS: none
+ *   RETURN VALUE: none
+ *   SIDE EFFECTS: none
+ */
 int32_t halt(uint8_t status) {
     printf("syscall %s (%d)\n", __FUNCTION__, status);
     asm volatile (".1: hlt; jmp .1;");

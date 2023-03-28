@@ -2,14 +2,14 @@
  * vim:ts=4 noexpandtab */
 
 #include "lib.h"
+#include "devices/keyboard.h"
+#include "devices/terminal.h"
 
 #define VIDEO       0xB8000
 #define NUM_COLS    80
 #define NUM_ROWS    25
 #define ATTRIB      0x7
 
-static int screen_x;
-static int screen_y;
 static char* video_mem = (char *)VIDEO;
 
 /* void clear(void);
@@ -164,21 +164,67 @@ int32_t puts(int8_t* s) {
     return index;
 }
 
+void scroll() {
+    screen_y = NUM_ROWS - 1;
+    // 2nd row starts at video memory index (NUM_COLS * 1 + 0) << 1
+    // size is (rows - 1) * cols * 2
+    memmove(video_mem, video_mem + (NUM_COLS << 1), (NUM_ROWS - 1) * NUM_COLS * 2);
+    int i;
+    for (i = NUM_COLS * screen_y; i < NUM_COLS * (screen_y + 1); i++) {
+        *(uint8_t *)(video_mem + (i << 1)) = ' ';
+        *(uint8_t *)(video_mem + (i << 1) + 1) = ATTRIB;
+    }
+}
+
 /* void putc(uint8_t c);
  * Inputs: uint_8* c = character to print
  * Return Value: void
  *  Function: Output a character to the console */
 void putc(uint8_t c) {
-    if(c == '\n' || c == '\r') {
-        screen_y = (screen_y + 1) % NUM_ROWS;
-        screen_x = 0;
-    } else {
-        *(uint8_t *)(video_mem + ((NUM_COLS * screen_y + screen_x) << 1)) = c;
-        *(uint8_t *)(video_mem + ((NUM_COLS * screen_y + screen_x) << 1) + 1) = ATTRIB;
-        screen_x++;
-        screen_x %= NUM_COLS;
-        screen_y = (screen_y + (screen_x / NUM_COLS)) % NUM_ROWS;
+    switch (c) {
+        case '\0':
+            return;
+        case '\n':
+        case '\r':
+            screen_x = 0;
+            screen_y++;
+            if (screen_y >= NUM_ROWS) {
+                scroll();
+            }
+            break;
+        case '\b':
+            if ((screen_x == 0) || kbuffer_size == 0) return;
+            screen_x--;
+            *(uint8_t *)(video_mem + ((NUM_COLS * screen_y + screen_x) << 1)) = ' ';
+            *(uint8_t *)(video_mem + ((NUM_COLS * screen_y + screen_x) << 1) + 1) = ATTRIB;
+            break;
+        case '\t':
+            {
+                int i = 0;
+                for (i = 0; i < 4; i++) {
+                    *(uint8_t *)(video_mem + ((NUM_COLS * screen_y + screen_x) << 1)) = ' ';
+                    *(uint8_t *)(video_mem + ((NUM_COLS * screen_y + screen_x) << 1) + 1) = ATTRIB;
+                    screen_x++;
+                    screen_y = (screen_y + (screen_x / NUM_COLS)) % NUM_ROWS;
+                    screen_x %= NUM_COLS;
+                }
+            }
+            break;
+        default:
+            *(uint8_t *)(video_mem + ((NUM_COLS * screen_y + screen_x) << 1)) = c;
+            *(uint8_t *)(video_mem + ((NUM_COLS * screen_y + screen_x) << 1) + 1) = ATTRIB;
+            screen_x++;
+            if (screen_x >= NUM_COLS) {
+                screen_x = 0;
+                screen_y++;
+                // Scroll terminal if we reach the end of the screen
+                if (screen_y >= NUM_ROWS) {
+                    scroll();
+                }
+            }
+            break;
     }
+    cursor_set(screen_x, screen_y);
 }
 
 /* int8_t* itoa(uint32_t value, int8_t* buf, int32_t radix);
@@ -247,6 +293,14 @@ uint32_t strlen(const int8_t* s) {
     while (s[len] != '\0')
         len++;
     return len;
+}
+
+int8_t islower(uint8_t c) {
+    return c >= 'a' && c <= 'z';
+}
+
+int8_t isalpha(uint8_t c) {
+    return (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z');
 }
 
 /* void* memset(void* s, int32_t c, uint32_t n);
@@ -474,4 +528,13 @@ void test_interrupts(void) {
     for (i = 0; i < NUM_ROWS * NUM_COLS; i++) {
         video_mem[i << 1]++;
     }
+}
+
+/* void test_interrupts_cp2(int32_t interrupt_counter)
+ * Inputs: int32_t interrupt_counter = specific location in video memory to increment
+ * Return Value: void
+ * Function: increments video memory. To be used to test rtc
+ * Print 1 character for every interrupt */
+void test_interrupts_cp2(int32_t interrupt_counter) {
+    video_mem[interrupt_counter << 1]++;
 }

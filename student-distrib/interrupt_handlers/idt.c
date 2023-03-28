@@ -4,8 +4,8 @@
 #include "exception.h"
 #include "syscall.h"
 #include "device_handlers.h"
-#include "keyboard.h"
-#include "rtc.h"
+#include "../devices/rtc.h"
+#include "../devices/keyboard.h"
 
 #define NUM_EXCEPTIONS 32
 #define SYSCALL_NUM 0x80

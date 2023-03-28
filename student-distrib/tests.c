@@ -611,6 +611,41 @@ int test_filesys_large_cat() {
     return result;
 }
 
+
+/* Filesystem Test - Cat
+    * 
+    * Asserts that we can read the contents of a file that's not in the fsdir directory
+    * Inputs: None
+    * Outputs: PASS/FAIL
+    * Side Effects: None
+    * Coverage: Filesystem
+    * Files: filesys.c/h */
+int test_filesys_executable_cat() {
+    int result = PASS;
+
+    // Read contents of grep file in fsdir directory
+    const uint8_t* directory = (uint8_t*)".";
+    int32_t fd = dir_open(directory);
+
+    int buffer_size = 6149;
+    uint8_t buf[buffer_size];
+    int32_t num_bytes_read = buffer_size;
+
+    const uint8_t* filename = (uint8_t*)"grep";
+    file_open(filename);
+    if (file_read(fd, buf, num_bytes_read) == -1) {
+        printf("Failed to read file");
+        result = FAIL;
+    } else {
+        int i;
+        for (i = 0; i < num_bytes_read; i++) {
+            putc(buf[i]);
+        }
+    }
+    return result;
+}
+
+
 /* Filesystem Test - Garbage/bad input
     * 
     * Asserts that system doesn't fail after receiving garbage/bad input
@@ -807,9 +842,10 @@ void launch_tests() {
     // TEST_OUTPUT("test_changing_rtc_freq", test_changing_rtc_freq());
     // TEST_OUTPUT("test_rtc_helper_funcs", test_rtc_helper_funcs());
     // TEST_OUTPUT("test_filesys_ls", test_filesys_ls());
-    // TEST_OUTPUT("test_filesys_small_cat", test_filesys_small_cat());
+    TEST_OUTPUT("test_filesys_small_cat", test_filesys_small_cat());
     // TEST_OUTPUT("test_filesys_bad_input", test_filesys_bad_input());
-    TEST_OUTPUT("test_filesys_large_cat", test_filesys_large_cat());
+    // TEST_OUTPUT("test_filesys_large_cat", test_filesys_large_cat());
+    // TEST_OUTPUT("test_filesys_executable_cat", test_filesys_executable_cat());
 
     // TEST_OUTPUT("terminal_read_test", terminal_read_test());
     // TEST_OUTPUT("terminal_read_write_test", terminal_read_write_test());

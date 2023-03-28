@@ -14,6 +14,7 @@
 char kbuffer[KBUFFER_SIZE];
 uint32_t kbuffer_size;
 
+uint8_t is_extended;
 uint8_t caps_lock_toggle;
 uint8_t caps_lock_active;
 uint8_t left_control_pressed;

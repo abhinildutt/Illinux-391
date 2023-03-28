@@ -13,6 +13,7 @@
 void keyboard_init() {
     enable_irq(KEYBOARD_IRQ_NUM);
     kbuffer_size = 0;
+    is_extended = 0;
     caps_lock_toggle = 0;
     caps_lock_active = 0;
     left_control_pressed = 0;
@@ -33,6 +34,18 @@ void keyboard_init() {
 void keyboard_handler() {
     cli();
     uint8_t scancode = inb(KEYBOARD_DATA_PORT);
+    if (scancode == CODE_EXTENDED) {
+        is_extended = 1;
+        send_eoi(KEYBOARD_IRQ_NUM);
+        sti();
+        return;
+    }
+    if (is_extended) { // we ignore extended for now
+        is_extended = 0;
+        send_eoi(KEYBOARD_IRQ_NUM);
+        sti();
+        return;
+    }
     if (scancode >= RELEASED_SCANCODE_OFFSET) { // released
         scancode -= RELEASED_SCANCODE_OFFSET;
         if (scancode >= NUM_SCANCODES) {
@@ -43,6 +56,9 @@ void keyboard_handler() {
         switch (scancode) {
             case CODE_LEFT_SHIFT:
                 left_shift_pressed = 0;
+                break;
+            case CODE_RIGHT_SHIFT:
+                right_shift_pressed = 0;
                 break;
             case CODE_LEFT_CONTROL:
                 left_control_pressed = 0;
@@ -79,6 +95,9 @@ void keyboard_handler() {
                 break;
             case CODE_LEFT_SHIFT:
                 left_shift_pressed = 1;
+                break;
+            case CODE_RIGHT_SHIFT:
+                right_shift_pressed = 1;
                 break;
             case CODE_CAPS_LOCK:
                 if (!caps_lock_toggle) {

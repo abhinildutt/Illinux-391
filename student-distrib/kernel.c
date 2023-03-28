@@ -8,16 +8,18 @@
 #include "i8259.h"
 #include "debug.h"
 #include "tests.h"
-#include "interrupt_handlers/rtc.h"
-#include "interrupt_handlers/keyboard.h"
 #include "paging.h"
+#include "filesys.h" 
+#include "devices/rtc.h"
+#include "devices/keyboard.h"
+#include "devices/terminal.h"
 
 #define RUN_TESTS
 
 /* Macros. */
 /* Check if the bit BIT in FLAGS is set. */
 #define CHECK_FLAG(flags, bit)   ((flags) & (1 << (bit)))
-
+unsigned int FS_BASE = 0;
 /* Check if MAGIC is valid and print the Multiboot information structure
    pointed by ADDR. */
 void entry(unsigned long magic, unsigned long addr) {
@@ -49,7 +51,7 @@ void entry(unsigned long magic, unsigned long addr) {
 
     /* Is the command line passed? */
     if (CHECK_FLAG(mbi->flags, 2))
-        printf("cmdline = %s\n", (char *)mbi->cmdline);
+        printf("cmdline = %s\n", (char *)mbi->cmdline); 
 
     if (CHECK_FLAG(mbi->flags, 3)) {
         int mod_count = 0;
@@ -57,6 +59,9 @@ void entry(unsigned long magic, unsigned long addr) {
         module_t* mod = (module_t*)mbi->mods_addr;
         while (mod_count < mbi->mods_count) {
             printf("Module %d loaded at address: 0x%#x\n", mod_count, (unsigned int)mod->mod_start);
+            if (mod_count == 0) {
+                FS_BASE = (unsigned int)mod->mod_start;
+            }
             printf("Module %d ends at address: 0x%#x\n", mod_count, (unsigned int)mod->mod_end);
             printf("First few bytes of module:\n");
             for (i = 0; i < 16; i++) {
@@ -145,20 +150,23 @@ void entry(unsigned long magic, unsigned long addr) {
     /* Initialize devices, memory, filesystem, enable device interrupts on the
      * PIC, any other initialization stuff... */
     keyboard_init();
+    fs_init((uint32_t*)FS_BASE);
+    term_init();
     // rtc_init();
     
     initialize_paging();
-
+    
     /* Enable interrupts */
     /* Do not enable the following until after you have set up your
      * IDT correctly otherwise QEMU will triple fault and simple close
      * without showing you any output */
-    printf("Enabling Interrupts\n");
+    // printf("Enabling Interrupts\n");
+    // rtc_open("test");
     sti();
 
 #ifdef RUN_TESTS
     /* Run tests */
-    launch_tests();
+    // launch_tests();
 #endif
     /* Execute the first program ("shell") ... */
     // clear();

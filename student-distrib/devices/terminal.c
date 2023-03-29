@@ -81,10 +81,10 @@ int32_t term_write(int32_t fd, void* buf, int32_t nbytes) {
     return nbytes;
 }
 
-/* Terminal Putc
-    * Inputs: c - the character to print
+/* Cursor Init
+    * Inputs: none
     * Return Value: none
-    * Function: Prints a character to the screen */
+    * Function: Initializes the cursor */
 void cursor_init() {
     outb(CURSOR_START, VGA_INDEX_PORT);
     char data = inb(VGA_DATA_PORT);
@@ -93,10 +93,11 @@ void cursor_init() {
     outb(data & 0xDF, VGA_DATA_PORT);
 }
 
-/* Terminal Putc
-    * Inputs: c - the character to print
+/* Cursor Set
+    * Inputs: x - the x coordinate of the cursor
+    *         y - the y coordinate of the cursor
     * Return Value: none
-    * Function: Prints a character to the screen */
+    * Function: Sets the cursor to the given coordinates */
 void cursor_set(uint32_t x, uint32_t y) {
     uint32_t pos = y * SCREEN_WIDTH + x;
     outb(CURSOR_LOCATION_HIGH, VGA_INDEX_PORT);

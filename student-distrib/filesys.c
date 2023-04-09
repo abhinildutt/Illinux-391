@@ -1,5 +1,5 @@
 #include "filesys.h"
-
+#include "syscalls_def.h"
 
 
 /*
@@ -18,6 +18,29 @@ void fs_init(uint32_t * fs_start_addr) {
     boot_block_ptr = (boot_block_t*)((uint8_t *)fs_start_addr);
     inode_ptr = (inode_t*)(((uint8_t *)fs_start_addr) + BLOCK_SIZE);
     data_block_ptr = (data_block_t*)(((uint8_t *)fs_start_addr) + BLOCK_SIZE + BLOCK_SIZE*(boot_block_ptr->num_inodes));
+
+
+    // pcb.pid = 1;
+    // pcb.parent_id = 0;
+    // pcb.fd_array = &(fd_array);
+    // pcb.saved_esp;
+    // pcb.saved_ebp;
+    // pcb.active;
+    int i;
+    for(i = 0; i < 8; i++) {
+        if(i == 0) {
+            fd_array[i].flags = 1;
+        }
+        else if(i == 1) {
+            fd_array[i].flags = 1;
+            fd_array[i].fops_pointer = stdout_fop;
+            fd_array[i].inode = 0;
+            fd_array[i].file_pos = 0;
+        }
+        else {
+            fd_array[i].flags = 0;
+        }
+    }
 }
 
 
@@ -143,7 +166,10 @@ int32_t file_open(const uint8_t* filename){
     *   SIDE EFFECTS: fills the buffer
 */
 int32_t file_read(int32_t fd, void* buf, int32_t nbytes){
-    return read_data(curr_dentry.inode_num, 0, buf, nbytes);
+    int32_t fl = read_data(fd_array[fd].inode, fd_array[fd].file_pos, buf, nbytes);
+    if(fl == -1) return -1;
+    fd_array[fd].file_pos += fl;
+    return fl;
 }
 
 /*
@@ -190,7 +216,7 @@ int32_t dir_read(int32_t fd, void* buf, int32_t nbytes){
     }
 
     dentry_t dentry;
-    if (read_dentry_by_index(curr_idx, &dentry) == -1) {
+    if (read_dentry_by_index(fd_array[fd].file_pos, &dentry) == -1) {
         return -1;
     }
     // Store the filename, filetype, and file size into the buffer
@@ -200,7 +226,7 @@ int32_t dir_read(int32_t fd, void* buf, int32_t nbytes){
     memcpy(buf + FILE_NAME_LEN + FILE_TYPE_SIZE, &(file_size), FILE_SIZE_SIZE);
 
     // Increment file position by one every time you read directory
-    curr_idx++;
+    fd_array[fd].file_pos++;
     return nbytes;
 }
 

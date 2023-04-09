@@ -1,9 +1,11 @@
 {
     "files.associations": {
+        "*.cpp": "cpp",
         "x86_desc.h": "c",
         "exception.h": "c",
         "multiboot.h": "c",
         "keyboard_scancodes.h": "c",
-        "keyboard.h": "c"
+        "keyboard.h": "c",
+        "compare": "c"
     }
 }

@@ -41,6 +41,17 @@ dentry_t curr_dentry;
 
 int32_t curr_idx;
 
+// typedef struct pcb_member {
+//     uint32_t pid;
+//     uint32_t parent_id;
+//     uint32_t* fd_array;
+//     uint32_t saved_esp;
+//     uint32_t saved_ebp;
+//     uint32_t active;
+// } pcb_member_t;
+
+// pcb_member_t pcb;
+
 void fs_init(uint32_t * fs_start_addr);
 
 

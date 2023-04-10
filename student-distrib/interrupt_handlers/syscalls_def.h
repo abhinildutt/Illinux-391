@@ -16,8 +16,8 @@ typedef struct
   int32_t (*write)(int32_t fd, const void* buf, int32_t nbytes);
 }  funcptrs;
 
-typedef struct fd_array_member {
-    uint32_t fops_pointer;
+typedef struct {
+    uint32_t *fops_pointer;
     uint32_t inode;
     uint32_t file_pos;
     uint32_t flags;

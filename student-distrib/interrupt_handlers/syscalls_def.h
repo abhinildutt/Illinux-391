@@ -3,10 +3,10 @@
 
 #include "../types.h"
 
-#include "rtc.h"
-#include "keyboard.h"
-#include "terminal.h"
-#include "filesys.h"
+#include "../devices/rtc.h"
+#include "../devices/keyboard.h"
+#include "../devices/terminal.h"
+#include "../filesys.h"
 
 typedef struct
 {
@@ -25,13 +25,13 @@ typedef struct {
 
 fd_array_member_t fd_array[8];
 
-funcptrs rtc_fop = {rtc_open, rtc_close, rtc_read, rtc_write};
-funcptrs directory_fop = {dir_open, dir_close, dir_read, dir_write};
-funcptrs regular_fop = {file_open, file_close, file_read, file_write};
-funcptrs stdin_fop = {term_open, term_close, term_read, NULL};
-funcptrs stdout_fop = {term_open, term_close, NULL, term_write};
+funcptrs rtc_fop;
+funcptrs directory_fop;
+funcptrs regular_fop;
+funcptrs stdin_fop;
+funcptrs stdout_fop;
 
-
+void fd_array_init();
 
 int32_t halt(uint8_t status);
 int32_t execute(const uint8_t* command);

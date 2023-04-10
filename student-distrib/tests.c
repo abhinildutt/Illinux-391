@@ -2,7 +2,7 @@
 #include "x86_desc.h"
 #include "lib.h"
 #include "paging.h"
-#include "interrupt_handlers/syscall.h"
+#include "interrupt_handlers/syscalls_def.h"
 #include "interrupt_handlers/exception.h"
 #include "interrupt_handlers/idt.h"
 #include "filesys.h"
@@ -819,6 +819,32 @@ int terminal_null_test(void) {
 }
 
 /* Checkpoint 3 tests */
+
+
+int syscalls_open_test() {
+    TEST_HEADER;
+    int ret;
+
+    const uint8_t* filename = (uint8_t*)"frame0.txt";
+    
+    asm volatile
+    (
+        "int $0x80"
+        : "=a" (ret)
+        : "0"(5), "b"(filename), "c"(NULL), "d"(NULL)
+        : "memory"
+    );
+    
+    if(ret != -1) {
+        printf("fd number : ", ret);
+        printf("\n");
+        return PASS;
+    }
+
+    return FAIL;
+}
+
+
 /* Checkpoint 4 tests */
 /* Checkpoint 5 tests */
 
@@ -842,7 +868,7 @@ void launch_tests() {
     // TEST_OUTPUT("test_changing_rtc_freq", test_changing_rtc_freq());
     // TEST_OUTPUT("test_rtc_helper_funcs", test_rtc_helper_funcs());
     // TEST_OUTPUT("test_filesys_ls", test_filesys_ls());
-    TEST_OUTPUT("test_filesys_small_cat", test_filesys_small_cat());
+    // TEST_OUTPUT("test_filesys_small_cat", test_filesys_small_cat());
     // TEST_OUTPUT("test_filesys_bad_input", test_filesys_bad_input());
     // TEST_OUTPUT("test_filesys_large_cat", test_filesys_large_cat());
     // TEST_OUTPUT("test_filesys_executable_cat", test_filesys_executable_cat());
@@ -851,4 +877,9 @@ void launch_tests() {
     // TEST_OUTPUT("terminal_read_write_test", terminal_read_write_test());
     // TEST_OUTPUT("terminal_write_test", terminal_write_test());
     // TEST_OUTPUT("terminal_null_test", terminal_null_test());
+
+    // Checkpoint 3 tests
+    TEST_OUTPUT("test_syscall_open", syscalls_open_test());
+
+
 }

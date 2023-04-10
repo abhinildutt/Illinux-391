@@ -59,7 +59,6 @@ int32_t execute(const uint8_t* command) {
 
     // CREATE NEW PCB
 
-
     // SETUP MEMORY
 
 
@@ -153,4 +152,45 @@ int32_t set_handler(int32_t signum, void* handler_address) {
 int32_t sigreturn(void) {
     printf("syscall %s\n", __FUNCTION__);
     return 0;
+}
+
+void fd_array_init() {
+    rtc_fop.read = rtc_read;
+    rtc_fop.write = rtc_write;
+    rtc_fop.open = rtc_open;
+    rtc_fop.close = rtc_close;
+
+    directory_fop.read = dir_read;
+    directory_fop.write = dir_write;
+    directory_fop.open = dir_open;
+    directory_fop.close = dir_close;
+
+    regular_fop.read = file_read;
+    regular_fop.write = file_write;
+    regular_fop.open = file_open;
+    regular_fop.close = file_close;
+
+    stdin_fop.read = term_read;
+    stdin_fop.write = NULL;
+    stdin_fop.open = term_open;
+    stdin_fop.close = term_close;
+
+    stdout_fop.read = NULL;
+    stdout_fop.write = term_write;
+    stdout_fop.open = term_open;
+    stdout_fop.close = term_close;
+
+
+    int i;
+    for(i = 0; i < 8; i++) {
+        fd_array[i].file_pos = 0;
+        fd_array[i].flags = 0;
+        fd_array[i].fops_pointer = NULL;
+        fd_array[i].inode = 0;
+    }
+    fd_array[0].fops_pointer = &stdin_fop;
+    fd_array[0].flags = 1;
+
+    fd_array[1].fops_pointer = &stdout_fop;
+    fd_array[1].flags = 1;
 }

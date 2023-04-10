@@ -13,6 +13,7 @@
 #include "devices/rtc.h"
 #include "devices/keyboard.h"
 #include "devices/terminal.h"
+#include "interrupt_handlers/syscalls_def.h"
 
 #define RUN_TESTS
 
@@ -146,13 +147,14 @@ void entry(unsigned long magic, unsigned long addr) {
 
     /* Init the PIC */
     i8259_init();
-
+    fd_array_init();
     /* Initialize devices, memory, filesystem, enable device interrupts on the
      * PIC, any other initialization stuff... */
     keyboard_init();
     fs_init((uint32_t*)FS_BASE);
     term_init();
     // rtc_init();
+    
     
     initialize_paging();
     
@@ -166,7 +168,7 @@ void entry(unsigned long magic, unsigned long addr) {
 
 #ifdef RUN_TESTS
     /* Run tests */
-    // launch_tests();
+    launch_tests();
 #endif
     /* Execute the first program ("shell") ... */
     // clear();

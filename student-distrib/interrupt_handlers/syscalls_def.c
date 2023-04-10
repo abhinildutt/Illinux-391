@@ -19,7 +19,48 @@ int32_t halt(uint8_t status) {
 int32_t execute(const uint8_t* command) {
     // printf("syscall %s \n", __FUNCTION__);
 
+    // PARSING COMMAND
+
     int cmd_len = strlen(command);
+
+    uint8_t file_name[1000];
+    int file_name_length = 0;
+
+    uint8_t file_arg[1000];
+    int file_arg_length = 0;
+
+    int i = 0;
+    while(i < cmd_len) {
+        if(command[i] == ' ' && file_name_length > 0) {
+            break;
+        }
+        file_name[file_name_length] = command[i];
+        file_name_length++;
+        i++;
+    }   
+
+    while(i < cmd_len) {
+        if(command[i] == ' ' && file_arg_length == 0) {
+            continue;
+        }
+        file_arg[file_arg_length] = command[i];
+        file_arg_length++;
+        i++;
+    }
+
+    // FILE CHECKS
+
+    dentry_t syscall_dentry;
+    uint8_t file_data_top4B[4];
+
+    if(file_name == NULL || read_dentry_by_name(file_name, &syscall_dentry) == -1) return -1; // file exists or not
+    if(read_data(syscall_dentry.inode_num, 0, file_data_top4B, sizeof(int32_t)) == -1) return -1; // file reading errors
+    if(file_data_top4B[0] != 0x7f || file_data_top4B[1] != 0x45 || file_data_top4B[2] != 0x4c || file_data_top4B[3] != 0x46) return -1; // file is not exe
+
+    // CREATE NEW PCB
+
+
+    // SETUP MEMORY
 
 
 
@@ -93,6 +134,9 @@ int32_t close(int32_t fd) {
 
 int32_t getargs(uint8_t* buf, int32_t nbytes) {
     printf("syscall %s\n", __FUNCTION__);
+
+    
+
     return 0;
 }
 

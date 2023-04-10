@@ -28,8 +28,8 @@ fd_array_member_t fd_array[8];
 funcptrs rtc_fop = {rtc_open, rtc_close, rtc_read, rtc_write};
 funcptrs directory_fop = {dir_open, dir_close, dir_read, dir_write};
 funcptrs regular_fop = {file_open, file_close, file_read, file_write};
-// funcptrs stdin_fop = {keyboard_init, NULL, keyboard_handler, NULL};
-funcptrs stdout_fop = {term_open, term_close, term_read, term_write};
+funcptrs stdin_fop = {term_open, term_close, term_read, NULL};
+funcptrs stdout_fop = {term_open, term_close, NULL, term_write};
 
 
 

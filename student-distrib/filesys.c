@@ -1,6 +1,6 @@
 #include "filesys.h"
 #include "interrupt_handlers/syscalls_def.h"
-
+#define MAX_NUM_FILES 8
 
 /*
     * fs_init
@@ -17,29 +17,6 @@ void fs_init(uint32_t * fs_start_addr) {
     boot_block_ptr = (boot_block_t*)((uint8_t *)fs_start_addr);
     inode_ptr = (inode_t*)(((uint8_t *)fs_start_addr) + BLOCK_SIZE);
     data_block_ptr = (data_block_t*)(((uint8_t *)fs_start_addr) + BLOCK_SIZE + BLOCK_SIZE*(boot_block_ptr->num_inodes));
-
-
-    // pcb.pid = 1;
-    // pcb.parent_id = 0;
-    // pcb.fd_array = &(fd_array);
-    // pcb.saved_esp;
-    // pcb.saved_ebp;
-    // pcb.active;
-    int i;
-    for(i = 0; i < 8; i++) {
-        if(i == 0) {
-            curr_pcb->fd_array[i].flags = 1;
-        }
-        else if(i == 1) {
-            curr_pcb->fd_array[i].flags = 1;
-            curr_pcb->fd_array[i].fops_pointer = stdout_fop;
-            curr_pcb->fd_array[i].inode = 0;
-            curr_pcb->fd_array[i].file_pos = 0;
-        }
-        else {
-            curr_pcb->fd_array[i].flags = 0;
-        }
-    }
 }
 
 
@@ -151,6 +128,11 @@ int32_t file_open(const uint8_t* filename){
     if (filename == NULL) {
         return -1;
     }
+    // Check if filename > 32 bytes
+    if (strlen((int8_t*)filename) > FILE_NAME_LEN) {
+        return -1;
+    }
+
     return read_dentry_by_name(filename, &curr_dentry);
 }
 

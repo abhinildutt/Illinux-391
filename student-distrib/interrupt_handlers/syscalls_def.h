@@ -11,6 +11,7 @@
 
 #define EIGHT_MB 0x800000
 #define EIGHT_KB 0x2000
+#define MAX_NUM_FILES 8
 
 
 typedef struct
@@ -22,23 +23,19 @@ typedef struct
 }  funcptrs;
 
 typedef struct {
-    uint32_t *fops_pointer;
+    funcptrs* fops_pointer;
     uint32_t inode;
     uint32_t file_pos;
     uint32_t flags;
 } fd_array_member_t;
 
-// fd_array_member_t fd_array[8];
-
-
 typedef struct pcb{
   uint32_t pid;
   uint32_t parent_pid;
-  fd_array_member_t fd_array[8];
+  fd_array_member_t fd_array[MAX_NUM_FILES];
   uint32_t esp;
   uint32_t ebp;
   uint32_t active;
-
 } pcb_t;
 
 funcptrs rtc_fop;

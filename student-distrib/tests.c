@@ -596,8 +596,14 @@ int test_filesys_large_cat() {
     uint8_t buf[buffer_size];
     int32_t num_bytes_read = buffer_size;
 
-    const uint8_t* filename = (uint8_t*)"verylargetextwithverylongname.tx";
-    file_open(filename);
+    const uint8_t* filename1 = (uint8_t*)"verylargetextwithverylongname.txt";
+    if (file_open(filename1) != -1) {
+        printf("Opened file that doesn't exist");
+        result = FAIL;
+    }
+
+    const uint8_t* filename2 = (uint8_t*)"verylargetextwithverylongname.tx";
+    file_open(filename2);
     if (file_read(fd, buf, num_bytes_read) == -1) {
         printf("Failed to read file");
         result = FAIL;
@@ -820,18 +826,29 @@ int terminal_null_test(void) {
 
 /* Checkpoint 3 tests */
 
-
+/* Syscall Test - Open
+    * 
+    * Asserts that we can get a pcb and open a file in that task and see that the file descriptor is in use
+    * Inputs: None
+    * Outputs: PASS/FAIL
+    * Side Effects: None
+    * Coverage: Syscall
+    * Files: syscall.c/h */
 int syscalls_open_test() {
     TEST_HEADER;
     int ret;
     printf("-------------------SYSCALL OPEN TEST----------------------\n");
     const uint8_t* filename = (uint8_t*)"frame0.txt";
-    
+    int pid = 0;
+    pcb_t* curr_pcb = get_curr_pcb(pid);
+
+    int open_arg = 5;
+
     asm volatile
     (
         "int $0x80"
         : "=a" (ret)
-        : "0"(5), "b"(filename), "c"(NULL), "d"(NULL)
+        : "0"(open_arg), "b"(filename), "c"(NULL), "d"(NULL)
         : "memory"
     );
     
@@ -839,8 +856,8 @@ int syscalls_open_test() {
         printf("fd number : %d \n", ret);
 
         int i;
-        for(i = 0; i < 8; i++) {
-            printf("| index %d flag | %d | \n", i, fd_array[i].flags);
+        for(i = 0; i < MAX_NUM_FILES; i++) {
+            printf("| index %d flag | %d | \n", i, curr_pcb->fd_array[i].flags);
         }
 
         return PASS;
@@ -849,26 +866,35 @@ int syscalls_open_test() {
     return FAIL;
 }
 
+/* Syscall Test - Close
+    * 
+    * Asserts that we can get a pcb and close a file in that task and see that the file descriptor is no longer in use
+    * Inputs: None
+    * Outputs: PASS/FAIL
+    * Side Effects: None
+    * Coverage: Syscall
+    * Files: syscall.c/h */
 int syscalls_close_test() {
     TEST_HEADER;
     int ret;
 
     printf("-------------------SYSCALL CLOSE TEST----------------------\n");
     const int8_t fd = 2;
-    
+    int close_arg = 6;
+
     asm volatile
     (
         "int $0x80"
         : "=a" (ret)
-        : "0"(6), "b"(fd), "c"(NULL), "d"(NULL)
+        : "0"(close_arg), "b"(fd), "c"(NULL), "d"(NULL)
         : "memory"
     );
     
     if(ret != -1) {
         printf("close status : %d \n", ret);
         int i;
-        for(i = 0; i < 8; i++) {
-            printf("| index %d flag | %d | \n", i, fd_array[i].flags);
+        for(i = 0; i < MAX_NUM_FILES; i++) {
+            printf("| index %d flag | %d | \n", i, curr_pcb->fd_array[i].flags);
         }
         return PASS;
     }
@@ -876,18 +902,28 @@ int syscalls_close_test() {
     return FAIL;
 }
 
+/* Syscall Test - Read
+    * 
+    * Asserts that we can get a pcb and read a file in that task and see that the file descriptor is in use
+    * Also read file to the display
+    * Inputs: None
+    * Outputs: PASS/FAIL
+    * Side Effects: None
+    * Coverage: Syscall
+    * Files: syscall.c/h */
 int syscalls_read_test() {
     TEST_HEADER;
     int ret;
 
     printf("-------------------SYSCALL READ TEST----------------------\n");
     const uint8_t* filename = (uint8_t*)"frame0.txt";
-    
+    int open_arg = 5;
+
     asm volatile
     (
         "int $0x80"
         : "=a" (ret)
-        : "0"(5), "b"(filename), "c"(NULL), "d"(NULL)
+        : "0"(open_arg), "b"(filename), "c"(NULL), "d"(NULL)
         : "memory"
     );
     
@@ -916,6 +952,14 @@ int syscalls_read_test() {
     return FAIL;
 }
 
+/* Syscall Test - Read Write
+    * 
+    * Asserts that when we write, stdout is updated and when we read a file, the fd_array is updated
+    * Inputs: None
+    * Outputs: PASS/FAIL
+    * Side Effects: None
+    * Coverage: Syscall
+    * Files: syscall.c/h */
 int syscalls_read_write_test() {
     TEST_HEADER;
     int ret;
@@ -935,14 +979,18 @@ int syscalls_read_write_test() {
 
     const int8_t fd = ret;
     char buf[KBUFFER_SIZE];
+
+    int read_arg = 3;
     
     asm volatile
     (
         "int $0x80"
         : "=a" (ret)
-        : "0"(3), "b"(fd), "c"(buf), "d"(KBUFFER_SIZE)
+        : "0"(read_arg), "b"(fd), "c"(buf), "d"(KBUFFER_SIZE)
         : "memory"
     );
+
+    int write_arg = 4;
     
     if(ret != -1) {
         printf("size : %d \n", ret);
@@ -952,7 +1000,7 @@ int syscalls_read_write_test() {
         (
             "int $0x80"
             : "=a" (ret)
-            : "0"(4), "b"(1), "c"(buf), "d"(size) // stdout
+            : "0"(write_arg), "b"(1), "c"(buf), "d"(size) // stdout
             : "memory"
         );
         return PASS;
@@ -961,6 +1009,14 @@ int syscalls_read_write_test() {
     return FAIL;
 }
 
+/* Syscall Test - STD Read Write
+    * 
+    * Asserts that we can read and write to the standard input and output
+    * Inputs: None
+    * Outputs: PASS/FAIL
+    * Side Effects: None
+    * Coverage: Syscall
+    * Files: syscall.c/h */
 int syscalls_std_read_write_test() {
     TEST_HEADER;
     int ret;
@@ -968,11 +1024,14 @@ int syscalls_std_read_write_test() {
     printf("-------------------SYSCALL STD READ-WRITE TEST----------------------\n");
     char buf[KBUFFER_SIZE];
     
+    int read_arg = 3;
+    int write_arg = 4;
+
     asm volatile
     (
         "int $0x80"
         : "=a" (ret)
-        : "0"(3), "b"(0), "c"(buf), "d"(KBUFFER_SIZE)
+        : "0"(read_arg), "b"(0), "c"(buf), "d"(KBUFFER_SIZE)
         : "memory"
     );
     
@@ -984,7 +1043,7 @@ int syscalls_std_read_write_test() {
         (
             "int $0x80"
             : "=a" (ret)
-            : "0"(4), "b"(1), "c"(buf), "d"(size) // stdout
+            : "0"(write_arg), "b"(1), "c"(buf), "d"(size) // stdout
             : "memory"
         );
         return PASS;
@@ -1026,10 +1085,10 @@ void launch_tests() {
     // TEST_OUTPUT("terminal_null_test", terminal_null_test());
 
     // Checkpoint 3 tests
-    // TEST_OUTPUT("test_syscall_open", syscalls_open_test());
+    TEST_OUTPUT("test_syscall_open", syscalls_open_test());
     // TEST_OUTPUT("test_syscall_close", syscalls_close_test());
     // TEST_OUTPUT("test_syscall_read", syscalls_read_test());
     // TEST_OUTPUT("test_syscall_read_write", syscalls_read_write_test());
-    TEST_OUTPUT("test_syscall_std_read_write", syscalls_std_read_write_test());
+    // TEST_OUTPUT("test_syscall_std_read_write", syscalls_std_read_write_test());
 
 }

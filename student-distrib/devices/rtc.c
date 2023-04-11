@@ -93,7 +93,7 @@ int32_t rtc_read(int32_t fd, void* buf, int32_t nbytes) {
  *   RETURN VALUE: 0 on success, -1 on failure
  *   SIDE EFFECTS: none
  */
-int32_t rtc_write(int32_t fd, void* buf, int32_t nbytes) {
+int32_t rtc_write(int32_t fd, const void* buf, int32_t nbytes) {
     if(buf == NULL) return -1;
     // The system call should always accept only a 4-byte integer specifying the interrupt rate in Hz,
     // and should set the rate of periodic interrupts accordingly

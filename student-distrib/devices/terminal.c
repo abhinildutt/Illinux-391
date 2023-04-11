@@ -72,7 +72,7 @@ int32_t term_read(int32_t fd, void* buf, int32_t nbytes) {
     *         nbytes - the number of bytes to write
     * Return Value: the number of bytes written
     * Function: Writes to the terminal */
-int32_t term_write(int32_t fd, void* buf, int32_t nbytes) {
+int32_t term_write(int32_t fd, const void* buf, int32_t nbytes) {
     if (buf == NULL) return -1;
     int i;
     for (i = 0; i < nbytes; i++) {

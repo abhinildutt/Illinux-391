@@ -22,7 +22,7 @@ void term_init();
 extern int32_t term_open(const uint8_t* filename);
 extern int32_t term_close(int32_t fd);
 extern int32_t term_read(int32_t fd, void* buf, int32_t nbytes);
-extern int32_t term_write(int32_t fd, void* buf, int32_t nbytes);
+extern int32_t term_write(int32_t fd, const void* buf, int32_t nbytes);
 
 extern void cursor_init();
 extern void cursor_set(uint32_t x, uint32_t y);

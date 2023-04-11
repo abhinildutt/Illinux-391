@@ -1,15 +1,15 @@
 #include "tests.h"
+#include "task.h"
 #include "x86_desc.h"
 #include "lib.h"
 #include "paging.h"
-#include "interrupt_handlers/syscall.h"
+#include "interrupt_handlers/syscalls_def.h"
 #include "interrupt_handlers/exception.h"
 #include "interrupt_handlers/idt.h"
-#include "filesys.h"
+#include "filesystem/filesys.h"
 #include "devices/rtc.h"
 #include "devices/keyboard.h"
 #include "devices/terminal.h"
-
 
 #define PASS 1
 #define FAIL 0
@@ -27,7 +27,7 @@
 #define TEST_OUTPUT(name, result)   \
     printf("[TEST %s] Result = %s\n", name, (result) ? "PASS" : "FAIL");
 
-static inline void assertion_failure(){
+static inline void assertion_failure() {
     /* Use exception #15 for assertions, otherwise
        reserved by Intel */
     asm volatile("int $15");
@@ -280,7 +280,7 @@ int test_paging_can_access() {
     }
 
     /* Test end of video memory */
-    ptr = (int*)(VIDEO_MEM + PAGE_SIZE - PDE_SIZE);
+    ptr = (int*)(VIDEO_MEM + PAGE_SIZE_4KB - PDE_SIZE);
     *ptr = 0x12345678;
     if (*ptr != 0x12345678) {
         assertion_failure();
@@ -327,7 +327,7 @@ int test_paging_cant_access() {
     }
 
     /* Test can't access just after video memory */
-    ptr = (int*)(VIDEO_MEM + PAGE_SIZE);
+    ptr = (int*)(VIDEO_MEM + PAGE_SIZE_4KB);
     *ptr = 0x12345678;
     if (*ptr == 0x12345678) {
         printf("Failed to catch access to just after video memory");
@@ -387,7 +387,7 @@ int test_values_in_paging_structs() {
 
     /* Test all page table entries except video memory to not present */
     for (i = 0; i < TABLE_SIZE; i++) {
-        if (i * PAGE_SIZE == VIDEO_MEM) {
+        if (i * PAGE_SIZE_4KB == VIDEO_MEM) {
             if (page_table[i].present != 1) {
                 printf("Entry %d in page table is not present", i);
                 result = FAIL;
@@ -421,20 +421,20 @@ int test_changing_rtc_freq() {
     int result = PASS;
 
     const uint8_t* filename = (uint8_t*)"rtc";
-    int32_t fd = rtc_open(filename);
+    rtc_open(NULL, filename);
 
     int freq;
     int num_bytes_written = 4;
     int i;
 
     for (freq = 2; freq <= MAX_RTC_FREQ; freq *= 2) {
-        if (rtc_write(fd, &freq, num_bytes_written) == -1) {
+        if (rtc_write(NULL, &freq, num_bytes_written) == -1) {
             printf("Failed to change RTC frequency to %d", freq);
             result = FAIL;
         }
 
         for (i = 0; i <= freq; i++) {
-            if (rtc_read(fd, NULL, 0) == -1) {
+            if (rtc_read(NULL, NULL, 0) == -1) {
                 printf("Failed to receive RTC interrupt at frequency %d", freq);
                 result = FAIL;
             }
@@ -445,14 +445,14 @@ int test_changing_rtc_freq() {
     }  
 
     // Test bad buffer pointer to write
-    if (rtc_write(fd, NULL, num_bytes_written) != -1) {
+    if (rtc_write(NULL, NULL, num_bytes_written) != -1) {
         printf("RTC write succeeded with bad buffer pointer");
         result = FAIL;
     }  
 
     // Set frequency back to 2
     freq = 2;
-    rtc_write(fd, &freq, num_bytes_written);
+    rtc_write(NULL, &freq, num_bytes_written);
 
     return result;
 }
@@ -469,7 +469,7 @@ int test_rtc_helper_funcs() {
     int result = PASS;
 
     const uint8_t* filename = (uint8_t*)"rtc";
-    rtc_open(filename);
+    rtc_open(NULL, filename);
 
     // Test frequency that's not a power of 2
     if (set_rtc_freq(3) != -1) {
@@ -511,7 +511,12 @@ int test_filesys_ls() {
 
     // List out every file name, file type, and file size in the fsdir directory
     const uint8_t* filename = (uint8_t*)".";
-    int32_t fd = dir_open(filename);
+    fd_array_member_t f;
+    f.file_pos = 0;
+    f.flags = 1;
+    f.fops = &directory_fops;
+    f.inode = 0;
+    dir_open(&f, filename);
 
     int buffer_size = FILE_NAME_LEN + FILE_TYPE_SIZE + FILE_SIZE_SIZE;
     uint8_t buf[buffer_size];
@@ -519,9 +524,10 @@ int test_filesys_ls() {
     int i;
     int num_files = 17;
     for (i = 0; i < num_files; i++) {
-        if (dir_read(fd, buf, num_bytes_read) == -1) {
+        if (dir_read(&f, buf, num_bytes_read) == -1) {
             printf("Failed to read directory entry");
             result = FAIL;
+            break;
         }
         // printf("File name: %s File type: %d File size: %d\n", buf, *(buf + FILE_NAME_LEN), *(uint32_t*)(buf + FILE_NAME_LEN + FILE_TYPE_SIZE));
 
@@ -556,15 +562,15 @@ int test_filesys_small_cat() {
 
     // Read contents of frame0.txt file in fsdir directory
     const uint8_t* directory = (uint8_t*)".";
-    int32_t fd = dir_open(directory);
+    dir_open(NULL, directory);
 
     int buffer_size = 187;
     uint8_t buf[buffer_size];
     int32_t num_bytes_read = buffer_size;
 
     const uint8_t* filename = (uint8_t*)"frame0.txt";
-    file_open(filename);
-    if (file_read(fd, buf, num_bytes_read) == -1) {
+    file_open(NULL, filename);
+    if (file_read(NULL, buf, num_bytes_read) == -1) {
         printf("Failed to read file");
         result = FAIL;
     } else {
@@ -590,15 +596,26 @@ int test_filesys_large_cat() {
 
     // Read contents of verylargetextwithverylongname.tx file in fsdir directory
     const uint8_t* directory = (uint8_t*)".";
-    int32_t fd = dir_open(directory);
+    dir_open(NULL, directory);
 
     int buffer_size = 5277;
     uint8_t buf[buffer_size];
     int32_t num_bytes_read = buffer_size;
 
-    const uint8_t* filename = (uint8_t*)"verylargetextwithverylongname.tx";
-    file_open(filename);
-    if (file_read(fd, buf, num_bytes_read) == -1) {
+    const uint8_t* filename1 = (uint8_t*)"verylargetextwithverylongname.txt";
+    fd_array_member_t f;
+    f.file_pos = 0;
+    f.flags = 1;
+    f.fops = &regular_fops;
+    f.inode = 0;
+    if (file_open(&f, filename1) != -1) {
+        printf("Opened file that doesn't exist");
+        result = FAIL;
+    }
+
+    const uint8_t* filename2 = (uint8_t*)"verylargetextwithverylongname.tx";
+    file_open(&f, filename2);
+    if (file_read(&f, buf, num_bytes_read) == -1) {
         printf("Failed to read file");
         result = FAIL;
     } else {
@@ -625,15 +642,15 @@ int test_filesys_executable_cat() {
 
     // Read contents of grep file in fsdir directory
     const uint8_t* directory = (uint8_t*)".";
-    int32_t fd = dir_open(directory);
+    dir_open(NULL, directory);
 
     int buffer_size = 6149;
     uint8_t buf[buffer_size];
     int32_t num_bytes_read = buffer_size;
 
     const uint8_t* filename = (uint8_t*)"grep";
-    file_open(filename);
-    if (file_read(fd, buf, num_bytes_read) == -1) {
+    file_open(NULL, filename);
+    if (file_read(NULL, buf, num_bytes_read) == -1) {
         printf("Failed to read file");
         result = FAIL;
     } else {
@@ -687,17 +704,17 @@ int test_filesys_bad_input() {
     }
 
     const uint8_t* directory = (uint8_t*)".";
-    int32_t fd = dir_open(directory);
+    dir_open(NULL, directory);
     int32_t num_bytes_read = 10;
 
     // Test dir_read with bad buffer
-    if (dir_read(fd, NULL, num_bytes_read) != -1) {
+    if (dir_read(NULL, NULL, num_bytes_read) != -1) {
         printf("Filesystem dir_read succeeded with bad buffer");
         result = FAIL;
     }
 
     // Test dir_open with bad filename
-    if (dir_open(NULL) != -1) {
+    if (dir_open(NULL, NULL) != -1) {
         printf("Filesystem dir_open succeeded with bad filename");
         result = FAIL;
     }
@@ -819,6 +836,270 @@ int terminal_null_test(void) {
 }
 
 /* Checkpoint 3 tests */
+
+/* Syscall Test - Open
+    * 
+    * Asserts that we can get a pcb and open a file in that task and see that the file descriptor is in use
+    * Inputs: None
+    * Outputs: PASS/FAIL
+    * Side Effects: None
+    * Coverage: Syscall
+    * Files: syscall.c/h */
+// int syscalls_open_test() {
+//     TEST_HEADER;
+//     int ret;
+//     printf("-------------------SYSCALL OPEN TEST----------------------\n");
+//     const uint8_t* filename = (uint8_t*)"frame0.txt";
+    
+//     asm volatile
+//     (
+//         "int $0x80"
+//         : "=a" (ret)
+//         : "0"(5), "b"(filename), "c"(NULL), "d"(NULL)
+//         : "memory"
+//     );
+    
+//     if(ret != -1) {
+//         printf("fd number : %d \n", ret);
+
+//         int i;
+//         for(i = 0; i < 8; i++) {
+//             printf("| index %d flag | %d | \n", i, fd_array[i].flags);
+//         }
+
+//         return PASS;
+//     }
+
+//     return FAIL;
+// }
+
+/* Syscall Test - Close
+    * 
+    * Asserts that we can get a pcb and close a file in that task and see that the file descriptor is no longer in use
+    * Inputs: None
+    * Outputs: PASS/FAIL
+    * Side Effects: None
+    * Coverage: Syscall
+    * Files: syscall.c/h */
+// int syscalls_close_test() {
+//     TEST_HEADER;
+//     int ret;
+
+//     printf("-------------------SYSCALL CLOSE TEST----------------------\n");
+//     const int8_t fd = 2;
+    
+//     asm volatile
+//     (
+//         "int $0x80"
+//         : "=a" (ret)
+//         : "0"(6), "b"(fd), "c"(NULL), "d"(NULL)
+//         : "memory"
+//     );
+    
+//     if(ret != -1) {
+//         printf("close status : %d \n", ret);
+//         int i;
+//         for(i = 0; i < 8; i++) {
+//             printf("| index %d flag | %d | \n", i, fd_array[i].flags);
+//         }
+//         return PASS;
+//     }
+
+//     return FAIL;
+// }
+
+// int syscalls_read_test() {
+//     TEST_HEADER;
+//     int ret;
+
+//     printf("-------------------SYSCALL READ TEST----------------------\n");
+//     const uint8_t* filename = (uint8_t*)"frame0.txt";
+    
+//     asm volatile
+//     (
+//         "int $0x80"
+//         : "=a" (ret)
+//         : "0"(5), "b"(filename), "c"(NULL), "d"(NULL)
+//         : "memory"
+//     );
+    
+//     const int8_t fd = ret;
+//     char buf[KBUFFER_SIZE];
+    
+//     asm volatile
+//     (
+//         "int $0x80"
+//         : "=a" (ret)
+//         : "0"(3), "b"(fd), "c"(buf), "d"(KBUFFER_SIZE)
+//         : "memory"
+//     );
+    
+//     if(ret != -1) {
+//         printf("size : %d \n", ret);
+//         printf("contents:\n");
+//         int i;
+//         for(i = 0; i < ret; i++) {
+//             putc(buf[i]);
+//         }
+//         printf("\n==================\nsize = %d\n", ret);
+//         return PASS;
+//     }
+
+//     return FAIL;
+// }
+
+/* Syscall Test - Read Write
+    * 
+    * Asserts that when we write, stdout is updated and when we read a file, the fd_array is updated
+    * Inputs: None
+    * Outputs: PASS/FAIL
+    * Side Effects: None
+    * Coverage: Syscall
+    * Files: syscall.c/h */
+int syscalls_read_write_test() {
+    TEST_HEADER;
+    int ret;
+
+    printf("-------------------SYSCALL READ-WRITE TEST----------------------\n");
+    const uint8_t* filename = (uint8_t*)"frame0.txt";
+    
+    asm volatile
+    (
+        "int $0x80"
+        : "=a" (ret)
+        : "0"(5), "b"(filename), "c"(NULL), "d"(NULL)
+        : "memory"
+    );
+    
+    if(ret == -1) return FAIL;
+
+    const int8_t fd = ret;
+    char buf[KBUFFER_SIZE];
+
+    int read_arg = 3;
+    
+    asm volatile
+    (
+        "int $0x80"
+        : "=a" (ret)
+        : "0"(read_arg), "b"(fd), "c"(buf), "d"(KBUFFER_SIZE)
+        : "memory"
+    );
+
+    int write_arg = 4;
+    
+    if(ret != -1) {
+        printf("size : %d \n", ret);
+        printf("contents:\n");
+        int size = ret;
+        asm volatile
+        (
+            "int $0x80"
+            : "=a" (ret)
+            : "0"(write_arg), "b"(1), "c"(buf), "d"(size) // stdout
+            : "memory"
+        );
+        return PASS;
+    }
+
+    return FAIL;
+}
+
+/* Syscall Test - STD Read Write
+    * 
+    * Asserts that we can read and write to the standard input and output
+    * Inputs: None
+    * Outputs: PASS/FAIL
+    * Side Effects: None
+    * Coverage: Syscall
+    * Files: syscall.c/h */
+int syscalls_std_read_write_test() {
+    TEST_HEADER;
+    int ret;
+
+    printf("-------------------SYSCALL STD READ-WRITE TEST----------------------\n");
+
+    int read_arg = 3;
+    int write_arg = 4;
+
+    char buf[KBUFFER_SIZE];
+    asm volatile
+    (
+        "int $0x80"
+        : "=a" (ret)
+        : "0"(read_arg), "b"(0), "c"(buf), "d"(KBUFFER_SIZE)
+        : "memory"
+    );
+    
+    if (ret != -1) {
+        printf("size : %d \n", ret);
+        printf("contents:\n");
+        int size = ret;
+        asm volatile
+        (
+            "int $0x80"
+            : "=a" (ret)
+            : "0"(write_arg), "b"(1), "c"(buf), "d"(size) // stdout
+            : "memory"
+        );
+        return PASS;
+    }
+
+    return FAIL;
+}
+
+int syscalls_cat_test() {
+    int result = PASS;
+
+    // Read contents of frame0.txt file in fsdir directory
+    // const uint8_t* directory = (uint8_t*)".";
+    // int32_t fd = dir_open(NULL, directory);
+
+    int buffer_size = 187;
+    uint8_t buf[buffer_size];
+    int32_t num_bytes_read = buffer_size;
+
+    const uint8_t* filename = (uint8_t*)"frame0.txt";
+    int32_t fd = open(filename);
+    if (read(fd, buf, num_bytes_read) == -1) {
+        printf("Failed to read file");
+        result = FAIL;
+    } else {
+        int i;
+        for (i = 0; i < num_bytes_read; i++) {
+            putc(buf[i]);
+        }
+    }
+
+    return result;
+}
+
+int syscalls_open_test() {
+    TEST_HEADER;
+    int ret;
+    printf("-------------------SYSCALL OPEN TEST----------------------\n");
+    const uint8_t* filename = (uint8_t*)"frame0.txt";
+    
+    asm volatile
+    (
+        "int $0x80"
+        : "=a" (ret)
+        : "0"(5), "b"(filename), "c"(NULL), "d"(NULL)
+        : "memory"
+    );
+    
+    if (ret != -1) {
+        printf("fd number : %d \n", ret);
+        int i;
+        for (i = 0; i < MAX_FILE_COUNT; i++) {
+            printf("| index %d flag | %d | \n", i, curr_pcb->fd_array[i].flags);
+        }
+        return PASS;
+    }
+
+    return FAIL;
+}
+
 /* Checkpoint 4 tests */
 /* Checkpoint 5 tests */
 
@@ -841,14 +1122,22 @@ void launch_tests() {
     // Checkpoint 2 tests
     // TEST_OUTPUT("test_changing_rtc_freq", test_changing_rtc_freq());
     // TEST_OUTPUT("test_rtc_helper_funcs", test_rtc_helper_funcs());
-    // TEST_OUTPUT("test_filesys_ls", test_filesys_ls());
-    TEST_OUTPUT("test_filesys_small_cat", test_filesys_small_cat());
+    TEST_OUTPUT("test_filesys_ls", test_filesys_ls());
+    // TEST_OUTPUT("test_filesys_small_cat", test_filesys_small_cat());
     // TEST_OUTPUT("test_filesys_bad_input", test_filesys_bad_input());
-    // TEST_OUTPUT("test_filesys_large_cat", test_filesys_large_cat());
+    TEST_OUTPUT("test_filesys_large_cat", test_filesys_large_cat());
     // TEST_OUTPUT("test_filesys_executable_cat", test_filesys_executable_cat());
 
     // TEST_OUTPUT("terminal_read_test", terminal_read_test());
     // TEST_OUTPUT("terminal_read_write_test", terminal_read_write_test());
     // TEST_OUTPUT("terminal_write_test", terminal_write_test());
     // TEST_OUTPUT("terminal_null_test", terminal_null_test());
+
+    // Checkpoint 3 tests
+    // TEST_OUTPUT("test_syscall_open", syscalls_open_test());
+    // TEST_OUTPUT("test_syscall_close", syscalls_close_test());
+    // TEST_OUTPUT("test_syscall_read", syscalls_read_test());
+    // TEST_OUTPUT("test_syscall_read_write", syscalls_read_write_test());
+    // TEST_OUTPUT("test_syscall_std_read_write", syscalls_std_read_write_test());
+    // TEST_OUTPUT("test_syscall_cat", syscalls_cat_test());
 }

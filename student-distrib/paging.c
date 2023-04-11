@@ -23,7 +23,7 @@ void initialize_paging(){
     page_directory[0].page_size = 0;
     page_directory[0].global_page = 0;
     page_directory[0].available = 0;
-    page_directory[0].page_table_addr = ((uint32_t) page_table) /PAGE_SIZE;
+    page_directory[0].page_table_addr = ((uint32_t) page_table) / PAGE_SIZE_4KB;
 
     // set page table entries for video memory
     int i;
@@ -39,7 +39,7 @@ void initialize_paging(){
         page_table[i].global_page = 0;
         page_table[i].available = 0;
         page_table[i].page_addr = i;
-        if (i*PAGE_SIZE == VIDEO_MEM){
+        if (i * PAGE_SIZE_4KB == VIDEO_MEM){
             page_table[i].present = 1;
             page_table[i].cache_disable = 0;
         }
@@ -57,7 +57,7 @@ void initialize_paging(){
     page_directory[1].global_page = 0;
     page_directory[1].available = 0;
 
-    page_directory[1].page_table_addr = (KERNEL_MEM /PAGE_SIZE);
+    page_directory[1].page_table_addr = KERNEL_MEM / PAGE_SIZE_4KB;
 
     // set rest of the entries to not present
     for(i = 2; i < TABLE_SIZE; i++){
@@ -76,5 +76,31 @@ void initialize_paging(){
 
     loadPageDirectory((int)page_directory);
     enablePaging();
+}
 
+void map_program(int32_t pid) {
+    uint32_t physical_addr = PROGRAM_IMAGE_PHYSICAL_BASE_ADDR + PAGE_SIZE_4MB * pid;
+    page_directory[PROGRAM_IMAGE_PD_IDX].present = 1;
+    page_directory[PROGRAM_IMAGE_PD_IDX].read_write = 1;
+    page_directory[PROGRAM_IMAGE_PD_IDX].user_supervisor = 1;
+    page_directory[PROGRAM_IMAGE_PD_IDX].write_through = 0;
+    page_directory[PROGRAM_IMAGE_PD_IDX].cache_disable = 0;
+    page_directory[PROGRAM_IMAGE_PD_IDX].accessed = 0;
+    page_directory[PROGRAM_IMAGE_PD_IDX].reserved = 0;
+    page_directory[PROGRAM_IMAGE_PD_IDX].page_size = 1;
+    page_directory[PROGRAM_IMAGE_PD_IDX].global_page = 0;
+    page_directory[PROGRAM_IMAGE_PD_IDX].available = 0;
+    page_directory[PROGRAM_IMAGE_PD_IDX].page_table_addr = physical_addr / PAGE_SIZE_4KB;
+    flush_tlb();
+}
+
+void flush_tlb() {
+    // https://wiki.osdev.org/TLB
+    asm volatile(
+        "movl %%cr3, %%eax  \n"
+        "movl %%eax, %%cr3  \n"
+        :
+        :
+        : "memory", "cc"
+    );
 }

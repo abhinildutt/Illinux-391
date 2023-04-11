@@ -27,6 +27,8 @@ extern int32_t term_open(fd_array_member_t* f, const uint8_t* filename);
 extern int32_t term_close(fd_array_member_t* f);
 extern int32_t term_read(fd_array_member_t* f, void* buf, int32_t nbytes);
 extern int32_t term_write(fd_array_member_t* f, const void* buf, int32_t nbytes);
+extern int32_t stdin_write_bad_call(fd_array_member_t *f, const void *buf, int32_t nbytes);
+extern int32_t stdout_read_bad_call(fd_array_member_t *f, void *buf, int32_t nbytes);
 
 extern void cursor_init();
 extern void cursor_set(uint32_t x, uint32_t y);

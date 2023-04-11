@@ -220,7 +220,7 @@ int32_t execute(const uint8_t* command) {
  *   SIDE EFFECTS: none
  */
 int32_t read(int32_t fd, void* buf, int32_t nbytes) {
-    // printf("syscall %s\n", __FUNCTION__);
+    // printf("syscall %s %d %d\n", __FUNCTION__, fd, nbytes);
     if (fd >= MAX_FILE_COUNT || fd < 0) return -1;
     curr_pcb = get_pcb(curr_pid);
     return fs_interface_read(&curr_pcb->fd_array[fd], buf, nbytes);
@@ -266,20 +266,16 @@ int32_t open(const uint8_t* filename) {
     for (fd = 0; fd < MAX_FILE_COUNT; fd++) {
         f = &curr_pcb->fd_array[fd];
         if (f->flags == 0) {
-            printf("fd %d is open\n", fd);
             if (read_dentry_by_name(filename, &syscall_dentry) == -1) return -1;
 
             int type = syscall_dentry.filetype;
             if (type == 0) {
-                printf("rtc type\n");
                 f->fops = &rtc_fops;
                 f->inode = 0;
             } else if (type == 1) {
-                printf("dir type\n");
                 f->fops = &directory_fops;
                 f->inode = 0;
             } else if (type == 2) {
-                printf("regular type\n");
                 f->fops = &regular_fops;
                 f->inode = syscall_dentry.inode_num; // this is something look at future.
             }
@@ -287,7 +283,7 @@ int32_t open(const uint8_t* filename) {
             if (fs_interface_open(f, filename) == -1) return -1;
             f->file_pos = 0;
             f->flags = 1;
-            printf("returning fd %d\n", fd);
+            printf("returning fd %d, opened %s\n", fd, filename);
             return fd;
         }
     }

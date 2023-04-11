@@ -511,7 +511,12 @@ int test_filesys_ls() {
 
     // List out every file name, file type, and file size in the fsdir directory
     const uint8_t* filename = (uint8_t*)".";
-    dir_open(NULL, filename);
+    fd_array_member_t f;
+    f.file_pos = 0;
+    f.flags = 1;
+    f.fops = &directory_fops;
+    f.inode = 0;
+    dir_open(&f, filename);
 
     int buffer_size = FILE_NAME_LEN + FILE_TYPE_SIZE + FILE_SIZE_SIZE;
     uint8_t buf[buffer_size];
@@ -519,9 +524,10 @@ int test_filesys_ls() {
     int i;
     int num_files = 17;
     for (i = 0; i < num_files; i++) {
-        if (dir_read(NULL, buf, num_bytes_read) == -1) {
+        if (dir_read(&f, buf, num_bytes_read) == -1) {
             printf("Failed to read directory entry");
             result = FAIL;
+            break;
         }
         // printf("File name: %s File type: %d File size: %d\n", buf, *(buf + FILE_NAME_LEN), *(uint32_t*)(buf + FILE_NAME_LEN + FILE_TYPE_SIZE));
 
@@ -1116,7 +1122,7 @@ void launch_tests() {
     // Checkpoint 2 tests
     // TEST_OUTPUT("test_changing_rtc_freq", test_changing_rtc_freq());
     // TEST_OUTPUT("test_rtc_helper_funcs", test_rtc_helper_funcs());
-    // TEST_OUTPUT("test_filesys_ls", test_filesys_ls());
+    TEST_OUTPUT("test_filesys_ls", test_filesys_ls());
     // TEST_OUTPUT("test_filesys_small_cat", test_filesys_small_cat());
     // TEST_OUTPUT("test_filesys_bad_input", test_filesys_bad_input());
     TEST_OUTPUT("test_filesys_large_cat", test_filesys_large_cat());

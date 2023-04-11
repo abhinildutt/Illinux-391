@@ -6,15 +6,23 @@ funcptrs stdin_fops = {
     .open = term_open,
     .close = term_close,
     .read = term_read,
-    .write = NULL
+    .write = stdin_write_bad_call
 };
 
 funcptrs stdout_fops = {
     .open = term_open,
     .close = term_close,
-    .read = NULL,
+    .read = stdout_read_bad_call,
     .write = term_write
 };
+
+int32_t stdin_write_bad_call(fd_array_member_t *f, const void *buf, int32_t nbytes) {
+    return -1;
+}
+
+int32_t stdout_read_bad_call(fd_array_member_t *f, void *buf, int32_t nbytes) {
+    return -1;
+}
 
 /* Terminal Reset
     * Inputs: none

@@ -1071,10 +1071,7 @@ int syscalls_cat_test() {
 
     curr_pcb = get_pcb(get_new_pid());
     fs_interface_init(curr_pcb->fd_array);
-
     int buffer_size = 187;
-    uint8_t buf[buffer_size];
-    int32_t num_bytes_read = buffer_size;
 
     const uint8_t* filename = (uint8_t*)"frame0.txt";
     int32_t fd = open(filename);
@@ -1091,20 +1088,18 @@ int syscalls_cat_test() {
     return result;
 }
 
+
 /* Syscall Test - Open
     * 
     * Asserts that we can open a file and that the fd_array is updated
     * Inputs: None
     * Outputs: PASS/FAIL
-    * Side Effects: None
     * Coverage: Syscall
     * Files: syscall.c/h */
 int syscalls_open_test() {
     TEST_HEADER;
     int ret;
     printf("-------------------SYSCALL OPEN TEST----------------------\n");
-    const uint8_t* filename = (uint8_t*)"frame0.txt";
-    
     int open_arg = 5;
     curr_pcb = get_pcb(get_new_pid());
     fs_interface_init(curr_pcb->fd_array);
@@ -1154,7 +1149,7 @@ void launch_tests() {
     // TEST_OUTPUT("test_filesys_ls", test_filesys_ls());
     // TEST_OUTPUT("test_filesys_small_cat", test_filesys_small_cat());
     // TEST_OUTPUT("test_filesys_bad_input", test_filesys_bad_input());
-    // TEST_OUTPUT("test_filesys_large_cat", test_filesys_large_cat());
+    TEST_OUTPUT("test_filesys_large_cat", test_filesys_large_cat());
     // TEST_OUTPUT("test_filesys_executable_cat", test_filesys_executable_cat());
 
     // TEST_OUTPUT("terminal_read_test", terminal_read_test());

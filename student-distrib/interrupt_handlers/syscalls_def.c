@@ -294,6 +294,7 @@ int32_t open(const uint8_t* filename) {
             f->file_pos = 0;
             f->flags = 1;
             // printf("returning fd %d, opened %s\n", fd, filename);
+            return fd;
         }
     }
     return -1;

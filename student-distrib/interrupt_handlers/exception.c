@@ -59,7 +59,9 @@ void exception_handler(int int_vector) {
     printf("Exception: %s\n", exception_messages[-int_vector - 1]);
     printf("Killing program\n");
     
-    halt(1); // infinite loop here, no interrupts can occur
+    // infinite loop here, no interrupts can occur
+    // asm volatile (".1 : hlt; jmp .1;");
+    halt(1);
 
     sti();
 } 

@@ -2,7 +2,7 @@
 #define _RTC_H
 
 #include "../lib.h"
-#include "../i8259.h"
+#include "../filesystem/filesys_interface.h"
 
 #define RTC_IRQ_NUM 8
 
@@ -17,11 +17,13 @@
 #define disable_NMI_B   0x8B
 #define disable_NMI_C   0x8C
 
+extern funcptrs rtc_fops;
+
 void rtc_init();
-int32_t rtc_open(const uint8_t* filename);
-int32_t rtc_close(int32_t fd);
-int32_t rtc_read(int32_t fd, void* buf, int32_t nbytes);
-int32_t rtc_write(int32_t fd, void* buf, int32_t nbytes);
+int32_t rtc_open(fd_array_member_t* f, const uint8_t* filename);
+int32_t rtc_close(fd_array_member_t* f);
+int32_t rtc_read(fd_array_member_t* f, void* buf, int32_t nbytes);
+int32_t rtc_write(fd_array_member_t* f, const void* buf, int32_t nbytes);
 void rtc_handler();
 
 int32_t set_rtc_freq(int32_t freq);

@@ -1073,6 +1073,9 @@ int syscalls_cat_test() {
     fs_interface_init(curr_pcb->fd_array);
     int buffer_size = 187;
 
+    char buf[buffer_size];
+    int num_bytes_read = buffer_size;
+
     const uint8_t* filename = (uint8_t*)"frame0.txt";
     int32_t fd = open(filename);
     if (read(fd, buf, num_bytes_read) == -1) {
@@ -1103,6 +1106,7 @@ int syscalls_open_test() {
     int open_arg = 5;
     curr_pcb = get_pcb(get_new_pid());
     fs_interface_init(curr_pcb->fd_array);
+    const uint8_t* filename = (uint8_t*)"frame0.txt";
 
     asm volatile
     (

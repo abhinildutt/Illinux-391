@@ -963,7 +963,8 @@ int terminal_null_test(void) {
 int syscalls_read_write_test() {
     TEST_HEADER;
     int ret;
-    curr_pcb = get_pcb(get_new_pid());
+    curr_pid = get_new_pid();
+    curr_pcb = get_pcb(curr_pid);
     fs_interface_init(curr_pcb->fd_array);
     printf("-------------------SYSCALL READ-WRITE TEST----------------------\n");
     const uint8_t* filename = (uint8_t*)"frame0.txt";
@@ -977,6 +978,7 @@ int syscalls_read_write_test() {
     );
     
     if(ret == -1) return FAIL;
+    printf("ret!\n");
 
     const int8_t fd = ret;
     char buf[KBUFFER_SIZE];
@@ -1072,15 +1074,16 @@ int syscalls_cat_test() {
     curr_pcb = get_pcb(get_new_pid());
     fs_interface_init(curr_pcb->fd_array);
     int buffer_size = 187;
-
+    char buf[KBUFFER_SIZE];
+    
     const uint8_t* filename = (uint8_t*)"frame0.txt";
     int32_t fd = open(filename);
-    if (read(fd, buf, num_bytes_read) == -1) {
+    if (read(fd, buf, buffer_size) == -1) {
         printf("Failed to read file");
         result = FAIL;
     } else {
         int i;
-        for (i = 0; i < num_bytes_read; i++) {
+        for (i = 0; i < buffer_size; i++) {
             putc(buf[i]);
         }
     }
@@ -1103,7 +1106,7 @@ int syscalls_open_test() {
     int open_arg = 5;
     curr_pcb = get_pcb(get_new_pid());
     fs_interface_init(curr_pcb->fd_array);
-
+    const uint8_t* filename = (uint8_t*)"frame0.txt";
     asm volatile
     (
         "int $0x80"

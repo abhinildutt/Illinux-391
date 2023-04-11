@@ -78,6 +78,14 @@ void initialize_paging(){
     enablePaging();
 }
 
+/* 
+* map_program
+*   DESCRIPTION: Maps a program to a page directory entry
+*   INPUTS: pid - the process id of the program
+*   OUTPUTS: none
+*   RETURN VALUE: none
+*   SIDE EFFECTS: maps a program to a page directory entry
+*/
 void map_program(int32_t pid) {
     uint32_t physical_addr = PROGRAM_IMAGE_PHYSICAL_BASE_ADDR + PAGE_SIZE_4MB * pid;
     page_directory[PROGRAM_IMAGE_PD_IDX].present = 1;
@@ -94,6 +102,14 @@ void map_program(int32_t pid) {
     flush_tlb();
 }
 
+/* 
+* flush_tlb
+*   DESCRIPTION: Flushes the TLB
+*   INPUTS: none
+*   OUTPUTS: none
+*   RETURN VALUE: none
+*   SIDE EFFECTS: flushes the TLB
+*/
 void flush_tlb() {
     // https://wiki.osdev.org/TLB
     asm volatile(

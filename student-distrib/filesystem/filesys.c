@@ -202,17 +202,16 @@ int32_t dir_read(fd_array_member_t* f, void* buf, int32_t nbytes){
     if (buf == NULL) {
         return -1;
     }
-    printf("dir read\n");
 
     dentry_t dentry;
     if (read_dentry_by_index(f->file_pos, &dentry) == -1) {
-        return -1;
+        return 0;
     }
     // Store the filename, filetype, and file size into the buffer
     memcpy(buf, &(dentry.filename), FILE_NAME_LEN);
-    memcpy(buf + FILE_NAME_LEN, &(dentry.filetype), FILE_TYPE_SIZE);
-    uint32_t file_size = inode_ptr[dentry.inode_num].length;
-    memcpy(buf + FILE_NAME_LEN + FILE_TYPE_SIZE, &(file_size), FILE_SIZE_SIZE);
+    // memcpy(buf + FILE_NAME_LEN, &(dentry.filetype), FILE_TYPE_SIZE);
+    // uint32_t file_size = inode_ptr[dentry.inode_num].length;
+    // memcpy(buf + FILE_NAME_LEN + FILE_TYPE_SIZE, &(file_size), FILE_SIZE_SIZE);
 
     // Increment file position by one every time you read directory
     f->file_pos++;

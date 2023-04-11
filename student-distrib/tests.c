@@ -824,7 +824,7 @@ int terminal_null_test(void) {
 int syscalls_open_test() {
     TEST_HEADER;
     int ret;
-
+    printf("-------------------SYSCALL OPEN TEST----------------------\n");
     const uint8_t* filename = (uint8_t*)"frame0.txt";
     
     asm volatile
@@ -836,14 +836,130 @@ int syscalls_open_test() {
     );
     
     if(ret != -1) {
-        printf("fd number : ", ret);
-        printf("\n");
+        printf("fd number : %d \n", ret);
+
+        int i;
+        for(i = 0; i < 8; i++) {
+            printf("| index %d flag | %d | \n", i, fd_array[i].flags);
+        }
+
         return PASS;
     }
 
     return FAIL;
 }
 
+int syscalls_close_test() {
+    TEST_HEADER;
+    int ret;
+
+    printf("-------------------SYSCALL CLOSE TEST----------------------\n");
+    const int8_t fd = 2;
+    
+    asm volatile
+    (
+        "int $0x80"
+        : "=a" (ret)
+        : "0"(6), "b"(fd), "c"(NULL), "d"(NULL)
+        : "memory"
+    );
+    
+    if(ret != -1) {
+        printf("close status : %d \n", ret);
+        int i;
+        for(i = 0; i < 8; i++) {
+            printf("| index %d flag | %d | \n", i, fd_array[i].flags);
+        }
+        return PASS;
+    }
+
+    return FAIL;
+}
+
+int syscalls_read_test() {
+    TEST_HEADER;
+    int ret;
+
+    printf("-------------------SYSCALL READ TEST----------------------\n");
+    const uint8_t* filename = (uint8_t*)"frame0.txt";
+    
+    asm volatile
+    (
+        "int $0x80"
+        : "=a" (ret)
+        : "0"(5), "b"(filename), "c"(NULL), "d"(NULL)
+        : "memory"
+    );
+    
+    const int8_t fd = ret;
+    char buf[KBUFFER_SIZE];
+    
+    asm volatile
+    (
+        "int $0x80"
+        : "=a" (ret)
+        : "0"(3), "b"(fd), "c"(buf), "d"(KBUFFER_SIZE)
+        : "memory"
+    );
+    
+    if(ret != -1) {
+        printf("size : %d \n", ret);
+        printf("contents:\n");
+        int i;
+        for(i = 0; i < ret; i++) {
+            putc(buf[i]);
+        }
+        printf("\n==================\nsize = %d\n", ret);
+        return PASS;
+    }
+
+    return FAIL;
+}
+
+int syscalls_read_write_test() {
+    TEST_HEADER;
+    int ret;
+
+    printf("-------------------SYSCALL READ-WRITE TEST----------------------\n");
+    const uint8_t* filename = (uint8_t*)"frame0.txt";
+    
+    asm volatile
+    (
+        "int $0x80"
+        : "=a" (ret)
+        : "0"(5), "b"(filename), "c"(NULL), "d"(NULL)
+        : "memory"
+    );
+    
+    if(ret == -1) return FAIL;
+
+    const int8_t fd = ret;
+    char buf[KBUFFER_SIZE];
+    
+    asm volatile
+    (
+        "int $0x80"
+        : "=a" (ret)
+        : "0"(3), "b"(fd), "c"(buf), "d"(KBUFFER_SIZE)
+        : "memory"
+    );
+    
+    if(ret != -1) {
+        printf("size : %d \n", ret);
+        printf("contents:\n");
+        int size = ret;
+        asm volatile
+        (
+            "int $0x80"
+            : "=a" (ret)
+            : "0"(4), "b"(1), "c"(buf), "d"(size) // stdout
+            : "memory"
+        );
+        return PASS;
+    }
+
+    return FAIL;
+}
 
 /* Checkpoint 4 tests */
 /* Checkpoint 5 tests */
@@ -879,7 +995,9 @@ void launch_tests() {
     // TEST_OUTPUT("terminal_null_test", terminal_null_test());
 
     // Checkpoint 3 tests
-    TEST_OUTPUT("test_syscall_open", syscalls_open_test());
-
+    // TEST_OUTPUT("test_syscall_open", syscalls_open_test());
+    // TEST_OUTPUT("test_syscall_close", syscalls_close_test());
+    // TEST_OUTPUT("test_syscall_read", syscalls_read_test());
+    // TEST_OUTPUT("test_syscall_read_write", syscalls_read_write_test());
 
 }

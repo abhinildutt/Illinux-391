@@ -2,6 +2,20 @@
 #include "keyboard.h"
 #include "../lib.h"
 
+funcptrs stdin_fops = {
+    .open = term_open,
+    .close = term_close,
+    .read = term_read,
+    .write = NULL
+};
+
+funcptrs stdout_fops = {
+    .open = term_open,
+    .close = term_close,
+    .read = NULL,
+    .write = term_write
+};
+
 /* Terminal Reset
     * Inputs: none
     * Return Value: none
@@ -26,27 +40,25 @@ void term_init() {
     * Inputs: filename - the name of the file to open
     * Return Value: 0
     * Function: Opens the terminal */
-int32_t term_open(const uint8_t* filename) {
-    term_reset();
+int32_t term_open(fd_array_member_t* f, const uint8_t* filename) {
+    kbuffer_size = 0;
     return 0;
 }
 
 /* Terminal Close
-    * Inputs: fd - the file descriptor of the terminal to close
+    * Inputs: none
     * Return Value: 0
     * Function: Closes the terminal */
-int32_t term_close(int32_t fd) {
-    term_reset();
+int32_t term_close(fd_array_member_t* f) {
     return 0;
 }
 
 /* Terminal Read
-    * Inputs: fd - the file descriptor of the terminal to read from
-    *         buf - the buffer to read into
+    * Inputs: buf - the buffer to read into
     *         nbytes - the number of bytes to read
     * Return Value: the number of bytes read
     * Function: Reads from the terminal */
-int32_t term_read(int32_t fd, void* buf, int32_t nbytes) {
+int32_t term_read(fd_array_member_t* f, void* buf, int32_t nbytes) {
     if (buf == NULL) return -1;
 
     sti();
@@ -67,12 +79,11 @@ int32_t term_read(int32_t fd, void* buf, int32_t nbytes) {
 }
 
 /* Terminal Write
-    * Inputs: fd - the file descriptor of the terminal to write to
-    *         buf - the buffer to write from
+    * Inputs: buf - the buffer to write from
     *         nbytes - the number of bytes to write
     * Return Value: the number of bytes written
     * Function: Writes to the terminal */
-int32_t term_write(int32_t fd, const void* buf, int32_t nbytes) {
+int32_t term_write(fd_array_member_t* f, const void* buf, int32_t nbytes) {
     if (buf == NULL) return -1;
     int i;
     for (i = 0; i < nbytes; i++) {

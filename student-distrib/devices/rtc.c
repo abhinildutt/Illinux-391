@@ -1,10 +1,18 @@
 #include "rtc.h"
 #include "../lib.h"
+#include "../i8259.h"
 
 #define bit6 0x40
 #define MAX_RTC_FREQ 1024
 #define RESET_FREQ 2
 #define THEORETICAL_MAX_FREQ 32768
+
+funcptrs rtc_fops = {
+    .open = rtc_open,
+    .close = rtc_close,
+    .read = rtc_read,
+    .write = rtc_write
+};
 
 /* 
  * rtc_init
@@ -17,7 +25,7 @@
 void rtc_init() {
     // Adapted from https://wiki.osdev.org/RTC#Turning_on_IRQ_8
     interrupt_flag = 0;
-    interrupt_counter = 0;
+    // interrupt_counter = 0;
     cli();
     outb(disable_NMI_B, RTC_PORT);   // select register B, and disable NMI
     char prev = inb(RTC_DATA);   // read the current value of register B
@@ -40,8 +48,8 @@ void rtc_handler() {
     
     // test_interrupts();
     // Print 1 character for every interrupt
-    test_interrupts_cp2(interrupt_counter);
-    interrupt_counter++;
+    // test_interrupts_cp2(interrupt_counter);
+    // interrupt_counter++;
 
     outb(disable_NMI_C, RTC_PORT);
     inb(RTC_DATA); // drop unneeded data
@@ -56,7 +64,7 @@ void rtc_handler() {
  *   RETURN VALUE: none
  *   SIDE EFFECTS: none
  */
-int32_t rtc_open(const uint8_t* filename) {
+int32_t rtc_open(fd_array_member_t* f, const uint8_t* filename) {
     set_rtc_freq(RESET_FREQ);
     return 0;
 }
@@ -69,13 +77,13 @@ int32_t rtc_open(const uint8_t* filename) {
  *   RETURN VALUE: none
  *   SIDE EFFECTS: none
  */
-int32_t rtc_close(int32_t fd) {
+int32_t rtc_close(fd_array_member_t* f) {
     // Does nothing since we don't virtualize RTC, return 0
     return 0;
 }
 
 
-int32_t rtc_read(int32_t fd, void* buf, int32_t nbytes) {
+int32_t rtc_read(fd_array_member_t* f, void* buf, int32_t nbytes) {
     // Block until the next interrupt
     // Wait until the interrupt handler clears interrupt_flag, then return 0
     while(!interrupt_flag);
@@ -93,7 +101,7 @@ int32_t rtc_read(int32_t fd, void* buf, int32_t nbytes) {
  *   RETURN VALUE: 0 on success, -1 on failure
  *   SIDE EFFECTS: none
  */
-int32_t rtc_write(int32_t fd, const void* buf, int32_t nbytes) {
+int32_t rtc_write(fd_array_member_t* f, const void* buf, int32_t nbytes) {
     if(buf == NULL) return -1;
     // The system call should always accept only a 4-byte integer specifying the interrupt rate in Hz,
     // and should set the rate of periodic interrupts accordingly

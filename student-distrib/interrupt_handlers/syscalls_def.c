@@ -19,6 +19,7 @@
 int32_t halt(uint8_t status) {
     if (curr_pid == -1) return -1;
     curr_pcb = get_pcb(curr_pid);
+    if (curr_pcb == NULL) return -1;
 
     // Close all task file descriptors
     int i;
@@ -121,6 +122,8 @@ int32_t execute(const uint8_t* command) {
     // printf("file exists\n");
     if (read_data(syscall_dentry.inode_num, 0, file_data_top4B, sizeof(int32_t)) == -1) return -1; // file reading errors
     // printf("file read properly\n");
+    //The first 4 bytes of the file represent a “magic number” that identifies the file as an executable. These
+    // bytes are, respectively, 0: 0x7f; 1: 0x45; 2: 0x4c; 3: 0x46.
     if (file_data_top4B[0] != 0x7f || file_data_top4B[1] != 0x45 || file_data_top4B[2] != 0x4c || file_data_top4B[3] != 0x46) return -1; // file is not exe
     // printf("file magic correct\n");
 
@@ -153,6 +156,9 @@ int32_t execute(const uint8_t* command) {
     // Setup PCB struct
     pcb->pid = new_pid;
     pcb->parent_pid = curr_pid;
+
+    // Subtract 4 because when, aligning the stack, esp is four byte aligned and to actually point to the stack,
+    // we have to delete 4 bytes (esp points beyond the stack)
     pcb->ebp = USER_STACK_VIRTUAL_ADDR + PAGE_SIZE_4MB - 4;
     pcb->esp = USER_STACK_VIRTUAL_ADDR + PAGE_SIZE_4MB - 4;
 
@@ -288,6 +294,7 @@ int32_t open(const uint8_t* filename) {
             f->file_pos = 0;
             f->flags = 1;
             // printf("returning fd %d, opened %s\n", fd, filename);
+            return fd;
         }
     }
     return -1;

@@ -71,7 +71,7 @@ int32_t read(int32_t fd, void* buf, int32_t nbytes) {
 
     if(fd >= 8 || fd < 0) return -1;
 
-    funcptrs* curr_fops = fd_array[fd].fops_pointer;
+    funcptrs* curr_fops = curr_pcb->fd_array[fd].fops_pointer;
     return curr_fops->read(fd, buf, nbytes);
 }
 
@@ -80,7 +80,7 @@ int32_t write(int32_t fd, const void* buf, int32_t nbytes) {
 
     if(fd >= 8 || fd < 0) return -1;
 
-    funcptrs* curr_fops = fd_array[fd].fops_pointer;
+    funcptrs* curr_fops = curr_pcb->fd_array[fd].fops_pointer;
     return curr_fops->write(fd, buf, nbytes);
 }
 
@@ -94,21 +94,21 @@ int32_t open(const uint8_t* filename) {
 
     int i;
     for(i = 0; i < 8; i++) {
-        if(fd_array[i].flags == 0) {
-            fd_array[i].file_pos = 0;
-            fd_array[i].flags = 1;
+        if(curr_pcb->fd_array[i].flags == 0) {
+            curr_pcb->fd_array[i].file_pos = 0;
+            curr_pcb->fd_array[i].flags = 1;
             int type = syscall_dentry.filetype;
             if(type == 0) {
-                fd_array[i].fops_pointer = &rtc_fop;
-                fd_array[i].inode = 0;
+                curr_pcb->fd_array[i].fops_pointer = &rtc_fop;
+                curr_pcb->fd_array[i].inode = 0;
             }
             if(type == 1) {
-                fd_array[i].fops_pointer = &directory_fop;
-                fd_array[i].inode = 0;
+                curr_pcb->fd_array[i].fops_pointer = &directory_fop;
+                curr_pcb->fd_array[i].inode = 0;
             }
             if(type == 2) {
-                fd_array[i].fops_pointer = &regular_fop;
-                fd_array[i].inode = syscall_dentry.inode_num; // this is something look at future.
+                curr_pcb->fd_array[i].fops_pointer = &regular_fop;
+                curr_pcb->fd_array[i].inode = syscall_dentry.inode_num; // this is something look at future.
             }
             break;
         }
@@ -120,13 +120,13 @@ int32_t close(int32_t fd) {
     printf("syscall %s\n", __FUNCTION__);
 
     if(fd >= 8 || fd < 0) return -1;
-    if(fd_array[fd].flags == 0) return -1;
+    if(curr_pcb->fd_array[fd].flags == 0) return -1;
 
-    fd_array[fd].flags = 0;
-    fd_array[fd].file_pos = 0;
-    fd_array[fd].inode = 0;
+    curr_pcb->fd_array[fd].flags = 0;
+    curr_pcb->fd_array[fd].file_pos = 0;
+    curr_pcb->fd_array[fd].inode = 0;
 
-    funcptrs* fp = fd_array[fd].fops_pointer;
+    funcptrs* fp = curr_pcb->fd_array[fd].fops_pointer;
     
     return fp->close(fd);
 }
@@ -152,6 +152,12 @@ int32_t set_handler(int32_t signum, void* handler_address) {
 int32_t sigreturn(void) {
     printf("syscall %s\n", __FUNCTION__);
     return 0;
+}
+
+
+pcb_t* get_curr_pcb(uint32_t curr_pid){
+    curr_pcb = (pcb_t *)(EIGHT_MB - (curr_pid + 1) * EIGHT_KB);
+    return curr_pcb;
 }
 
 void fd_array_init() {
@@ -183,14 +189,14 @@ void fd_array_init() {
 
     int i;
     for(i = 0; i < 8; i++) {
-        fd_array[i].file_pos = 0;
-        fd_array[i].flags = 0;
-        fd_array[i].fops_pointer = NULL;
-        fd_array[i].inode = 0;
+        curr_pcb->fd_array[i].file_pos = 0;
+        curr_pcb->fd_array[i].flags = 0;
+        curr_pcb->fd_array[i].fops_pointer = NULL;
+        curr_pcb->fd_array[i].inode = 0;
     }
-    fd_array[0].fops_pointer = &stdin_fop;
-    fd_array[0].flags = 1;
+    curr_pcb->fd_array[0].fops_pointer = &stdin_fop;
+    curr_pcb->fd_array[0].flags = 1;
 
-    fd_array[1].fops_pointer = &stdout_fop;
-    fd_array[1].flags = 1;
+    curr_pcb->fd_array[1].fops_pointer = &stdout_fop;
+    curr_pcb->fd_array[1].flags = 1;
 }

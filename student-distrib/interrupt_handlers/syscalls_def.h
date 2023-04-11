@@ -8,6 +8,11 @@
 #include "../devices/terminal.h"
 #include "../filesys.h"
 
+
+#define EIGHT_MB 0x800000
+#define EIGHT_KB 0x2000
+
+
 typedef struct
 {
   int32_t (*open)(const uint8_t* filename);
@@ -23,7 +28,18 @@ typedef struct {
     uint32_t flags;
 } fd_array_member_t;
 
-fd_array_member_t fd_array[8];
+// fd_array_member_t fd_array[8];
+
+
+typedef struct pcb{
+  uint32_t pid;
+  uint32_t parent_pid;
+  fd_array_member_t fd_array[8];
+  uint32_t esp;
+  uint32_t ebp;
+  uint32_t active;
+
+} pcb_t;
 
 funcptrs rtc_fop;
 funcptrs directory_fop;
@@ -43,5 +59,7 @@ int32_t getargs(uint8_t* buf, int32_t nbytes);
 int32_t vidmap(uint8_t** screen_start);
 int32_t set_handler (int32_t signum, void* handler_address);
 int32_t sigreturn (void);
+pcb_t* get_curr_pcb(uint32_t curr_pid);
+pcb_t* curr_pcb;
 
 #endif

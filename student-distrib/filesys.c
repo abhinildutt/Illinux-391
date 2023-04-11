@@ -29,16 +29,16 @@ void fs_init(uint32_t * fs_start_addr) {
     int i;
     for(i = 0; i < 8; i++) {
         if(i == 0) {
-            fd_array[i].flags = 1;
+            curr_pcb->fd_array[i].flags = 1;
         }
         else if(i == 1) {
-            fd_array[i].flags = 1;
-            fd_array[i].fops_pointer = stdout_fop;
-            fd_array[i].inode = 0;
-            fd_array[i].file_pos = 0;
+            curr_pcb->fd_array[i].flags = 1;
+            curr_pcb->fd_array[i].fops_pointer = stdout_fop;
+            curr_pcb->fd_array[i].inode = 0;
+            curr_pcb->fd_array[i].file_pos = 0;
         }
         else {
-            fd_array[i].flags = 0;
+            curr_pcb->fd_array[i].flags = 0;
         }
     }
 }
@@ -166,9 +166,9 @@ int32_t file_open(const uint8_t* filename){
     *   SIDE EFFECTS: fills the buffer
 */
 int32_t file_read(int32_t fd, void* buf, int32_t nbytes){
-    int32_t fl = read_data(fd_array[fd].inode, fd_array[fd].file_pos, buf, nbytes);
+    int32_t fl = read_data(curr_pcb->fd_array[fd].inode, curr_pcb->fd_array[fd].file_pos, buf, nbytes);
     if(fl == -1) return -1;
-    fd_array[fd].file_pos += fl;
+    curr_pcb->fd_array[fd].file_pos += fl;
     return fl;
 }
 
@@ -216,7 +216,7 @@ int32_t dir_read(int32_t fd, void* buf, int32_t nbytes){
     }
 
     dentry_t dentry;
-    if (read_dentry_by_index(fd_array[fd].file_pos, &dentry) == -1) {
+    if (read_dentry_by_index(curr_pcb->fd_array[fd].file_pos, &dentry) == -1) {
         return -1;
     }
     // Store the filename, filetype, and file size into the buffer
@@ -226,7 +226,7 @@ int32_t dir_read(int32_t fd, void* buf, int32_t nbytes){
     memcpy(buf + FILE_NAME_LEN + FILE_TYPE_SIZE, &(file_size), FILE_SIZE_SIZE);
 
     // Increment file position by one every time you read directory
-    fd_array[fd].file_pos++;
+    curr_pcb->fd_array[fd].file_pos++;
     return nbytes;
 }
 

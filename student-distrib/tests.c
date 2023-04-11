@@ -961,6 +961,37 @@ int syscalls_read_write_test() {
     return FAIL;
 }
 
+int syscalls_std_read_write_test() {
+    TEST_HEADER;
+    int ret;
+
+    printf("-------------------SYSCALL STD READ-WRITE TEST----------------------\n");
+    char buf[KBUFFER_SIZE];
+    
+    asm volatile
+    (
+        "int $0x80"
+        : "=a" (ret)
+        : "0"(3), "b"(0), "c"(buf), "d"(KBUFFER_SIZE)
+        : "memory"
+    );
+    
+    if(ret != -1) {
+        printf("size : %d \n", ret);
+        printf("contents:\n");
+        int size = ret;
+        asm volatile
+        (
+            "int $0x80"
+            : "=a" (ret)
+            : "0"(4), "b"(1), "c"(buf), "d"(size) // stdout
+            : "memory"
+        );
+        return PASS;
+    }
+
+    return FAIL;
+}
 /* Checkpoint 4 tests */
 /* Checkpoint 5 tests */
 
@@ -999,5 +1030,6 @@ void launch_tests() {
     // TEST_OUTPUT("test_syscall_close", syscalls_close_test());
     // TEST_OUTPUT("test_syscall_read", syscalls_read_test());
     // TEST_OUTPUT("test_syscall_read_write", syscalls_read_write_test());
+    TEST_OUTPUT("test_syscall_std_read_write", syscalls_std_read_write_test());
 
 }

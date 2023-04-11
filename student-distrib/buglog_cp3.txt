@@ -1,0 +1,18 @@
+Reading from files with large names should not work because of the limited filename size
+Solution: If filename is larger than the max buffer size, do not read it
+
+
+After adding support for multiple open files via the pcb, we started running into page faults.
+Solution: Add a call to get_curr_pcb before accessing the global pointer to make sure it is updated every time.
+
+
+Kept getting page fault when executing
+Solution: Forgot to set the present bit to 1 which caused a page fault even though the page was still there.
+
+
+Task switching was not working
+Solution: we had to change $0 to be %0
+
+
+Task switching breaking on halt
+solution: we were storing the ebp & esp pointers to the current task, not the parent task

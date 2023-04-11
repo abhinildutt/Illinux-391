@@ -100,7 +100,7 @@ void send_eoi(uint32_t irq_num) {
     if (irq_num >= 8) {
         // printf("Secondary PIC called");
         outb(EOI | (irq_num - 8), SLAVE_8259_PORT);
-        outb(EOI + 2, MASTER_8259_PORT);
+        outb(EOI + ENABLE_IRQ_NUM, MASTER_8259_PORT);
     } else {
         outb(EOI | irq_num, MASTER_8259_PORT);
     }

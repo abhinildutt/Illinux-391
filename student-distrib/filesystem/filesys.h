@@ -10,6 +10,10 @@
 #define FILE_TYPE_SIZE 4
 #define FILE_SIZE_SIZE 4
 
+#define FILE_TYPE_RTC 0
+#define FILE_TYPE_DIR 1
+#define FILE_TYPE_FILE 2
+
 typedef struct dentry {
     uint8_t filename[FILE_NAME_LEN];
     uint32_t filetype;

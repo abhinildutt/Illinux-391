@@ -86,7 +86,11 @@ int32_t rtc_close(fd_array_member_t* f) {
 int32_t rtc_read(fd_array_member_t* f, void* buf, int32_t nbytes) {
     // Block until the next interrupt
     // Wait until the interrupt handler clears interrupt_flag, then return 0
-    while(!interrupt_flag);
+    sti();
+    while (!interrupt_flag) {
+        // Do nothing
+        asm volatile("hlt");
+    }
     interrupt_flag = 0;
     return 0;
 }

@@ -26,6 +26,14 @@
     printf("[TEST %s] Running %s at %s:%d\n", __FUNCTION__, __FUNCTION__, __FILE__, __LINE__)
 #define TEST_OUTPUT(name, result)   \
     printf("[TEST %s] Result = %s\n", name, (result) ? "PASS" : "FAIL");
+#define SYSCALL(ret, number, arg1, arg2, arg3) \
+    asm volatile                                       \
+    (                                                  \
+        "int $0x80"                                    \
+        : "=a" (ret)                                   \
+        : "0"(number), "b"(arg1), "c"(arg2), "d"(arg3) \
+        : "memory"                                     \
+    );
 
 static inline void assertion_failure() {
     /* Use exception #15 for assertions, otherwise

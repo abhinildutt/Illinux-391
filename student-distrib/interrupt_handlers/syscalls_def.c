@@ -13,7 +13,7 @@
  *   DESCRIPTION: Halt the system and return the status to the parent process.
  *   INPUTS: status -- exit status
  *   OUTPUTS: none
- *   RETURN VALUE: none
+ *   RETURN VALUE: 0 if successful, -1 if not successful
  *   SIDE EFFECTS: none
  */
 int32_t halt(uint8_t status) {
@@ -29,12 +29,17 @@ int32_t halt(uint8_t status) {
     // Disable current task
     curr_pcb->active = 0;
     if (curr_pcb->parent_pid != -1) { // parent exists, return to parent
+        // Unmap paging for current task
+        // unmap_program(curr_pid);
+
         map_program(curr_pcb->parent_pid);
         tss.ss0 = KERNEL_DS;
+        // 8MB (bottom of 4MB kernel page) - 8KB (size of kernel stack) - 4B (to get to top of stack)
         tss.esp0 = KERNEL_STACK_ADDR - USER_KERNEL_STACK_SIZE * curr_pcb->parent_pid - 0x4;
-        // Switch back to parent's PID
+        // Switch back to parent's PID, set parent as active
         curr_pid = curr_pcb->parent_pid;
         curr_pcb = get_pcb(curr_pid);
+        curr_pcb->active = 1;
         
         // Restore stack pointers & put status code in eax
         asm volatile ("       \n \
@@ -104,7 +109,7 @@ int32_t execute(const uint8_t* command) {
         sti();
         return -1;
     }
-    file_name[file_name_length] = '\0';
+    // file_name[file_name_length] = '\0'; // Might not need this
 
     while (i < cmd_len) {
         if(command[i] == ' ' && file_arg_length == 0) {
@@ -118,6 +123,7 @@ int32_t execute(const uint8_t* command) {
         file_arg_length++;
         i++;
     }
+    // Per docs, if the arguments and a terminal NULL (0-byte) do not fit in the buffer, simply return -1.
     if (file_arg_length >= FILE_NAME_LEN) {
         sti();
         return -1;
@@ -143,7 +149,7 @@ int32_t execute(const uint8_t* command) {
         return -1;
     }
     // printf("file read properly\n");
-    //The first 4 bytes of the file represent a “magic number” that identifies the file as an executable. These
+    // The first 4 bytes of the file represent a “magic number” that identifies the file as an executable. These
     // bytes are, respectively, 0: 0x7f; 1: 0x45; 2: 0x4c; 3: 0x46.
     if (file_data_top4B[0] != 0x7f || file_data_top4B[1] != 0x45 || file_data_top4B[2] != 0x4c || file_data_top4B[3] != 0x46) {
         sti();
@@ -161,7 +167,8 @@ int32_t execute(const uint8_t* command) {
 
     uint8_t entry_buf[4];
     // Getting the eip
-    read_data(syscall_dentry.inode_num, PROGRAM_ENTRY_POINT, entry_buf, 4);
+    // Per docs, The EIP you need to jump to is the entry point from bytes 24-27 of the executable
+    read_data(syscall_dentry.inode_num, PROGRAM_ENTRY_POINT, entry_buf, sizeof(int32_t));
     prog_eip = *((uint32_t*) entry_buf);
 
     // Setup paging
@@ -181,7 +188,11 @@ int32_t execute(const uint8_t* command) {
     // Setup PCB struct
     pcb->pid = new_pid;
     pcb->parent_pid = curr_pid;
+    pcb->active = 1;
 
+    // All user programs start at USER_STACK_VIRTUAL_ADDR
+    // Stack starts at the end of the program and grows towards lower addresses (that's the + PAGE_SIZE_4MB part)
+    // All the programs start from the same place from the program's perspective
     // Subtract 4 because when, aligning the stack, esp is four byte aligned and to actually point to the stack,
     // we have to delete 4 bytes (esp points beyond the stack)
     pcb->ebp = USER_STACK_VIRTUAL_ADDR + PAGE_SIZE_4MB - 4;
@@ -210,6 +221,7 @@ int32_t execute(const uint8_t* command) {
     // Task switching
     pcb->eip = prog_eip;
     tss.ss0 = KERNEL_DS;
+    // 8MB (bottom of 4MB kernel page) - 8KB (size of kernel stack) - 4B (to get to top of stack)
     tss.esp0 = KERNEL_STACK_ADDR - USER_KERNEL_STACK_SIZE * new_pid - 0x4;
 
     // Switch to create task

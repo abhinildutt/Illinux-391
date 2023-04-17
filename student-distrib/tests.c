@@ -1076,8 +1076,6 @@ int syscalls_cat_test() {
     int buffer_size = 187;
 
     char buf[buffer_size];
-    int num_bytes_read = buffer_size;
-
     const uint8_t* filename = (uint8_t*)"frame0.txt";
     int32_t fd = open(filename);
     if (read(fd, buf, buffer_size) == -1) {
@@ -1154,7 +1152,7 @@ void launch_tests() {
     // TEST_OUTPUT("test_filesys_ls", test_filesys_ls());
     // TEST_OUTPUT("test_filesys_small_cat", test_filesys_small_cat());
     // TEST_OUTPUT("test_filesys_bad_input", test_filesys_bad_input());
-    TEST_OUTPUT("test_filesys_large_cat", test_filesys_large_cat());
+    // TEST_OUTPUT("test_filesys_large_cat", test_filesys_large_cat());
     // TEST_OUTPUT("test_filesys_executable_cat", test_filesys_executable_cat());
 
     // TEST_OUTPUT("terminal_read_test", terminal_read_test());
@@ -1166,7 +1164,7 @@ void launch_tests() {
     // TEST_OUTPUT("test_syscall_open", syscalls_open_test());
     // TEST_OUTPUT("test_syscall_close", syscalls_close_test());
     // TEST_OUTPUT("test_syscall_read", syscalls_read_test());
-    TEST_OUTPUT("test_syscall_read_write", syscalls_read_write_test());
+    // TEST_OUTPUT("test_syscall_read_write", syscalls_read_write_test());
     // TEST_OUTPUT("test_syscall_std_read_write", syscalls_std_read_write_test());
     // TEST_OUTPUT("test_syscall_cat", syscalls_cat_test());
 }

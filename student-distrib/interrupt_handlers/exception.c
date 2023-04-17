@@ -3,6 +3,7 @@
 #include "syscalls_def.h"
 
 #define NUM_EXCEPTIONS 32
+#define PROGRAM_EXCEPTION_FAIL_NUM 256
 
 const char* exception_messages[NUM_EXCEPTIONS] = {
     "Division by zero",
@@ -61,7 +62,7 @@ void exception_handler(int int_vector) {
     
     // infinite loop here, no interrupts can occur
     // asm volatile (".1 : hlt; jmp .1;");
-    halt(1);
+    halt(PROGRAM_EXCEPTION_FAIL_NUM);
 
     sti();
 } 

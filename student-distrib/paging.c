@@ -80,13 +80,16 @@ void initialize_paging(){
 
 /* 
 * map_program
-*   DESCRIPTION: Maps a program to a page directory entry
+*   DESCRIPTION: Maps a program to a page directory entry (maps virtual address to physical address)
 *   INPUTS: pid - the process id of the program
 *   OUTPUTS: none
 *   RETURN VALUE: none
 *   SIDE EFFECTS: maps a program to a page directory entry
 */
 void map_program(int32_t pid) {
+    // Per the docs, the first user-level program (the shell) should be loaded at physical 8 MB,
+    // and the second user-level program, when it is executed by the shell, should be loaded at
+    // physical 12 MB
     uint32_t physical_addr = PROGRAM_IMAGE_PHYSICAL_BASE_ADDR + PAGE_SIZE_4MB * pid;
     page_directory[PROGRAM_IMAGE_PD_IDX].present = 1;
     page_directory[PROGRAM_IMAGE_PD_IDX].read_write = 1;
@@ -99,6 +102,22 @@ void map_program(int32_t pid) {
     page_directory[PROGRAM_IMAGE_PD_IDX].global_page = 0;
     page_directory[PROGRAM_IMAGE_PD_IDX].available = 0;
     page_directory[PROGRAM_IMAGE_PD_IDX].page_table_addr = physical_addr / PAGE_SIZE_4KB;
+    flush_tlb();
+}
+
+/* 
+* unmap_program
+*   DESCRIPTION: Unmaps a program from a page directory entry (unmaps virtual address to physical address)
+*   INPUTS: pid - the process id of the program
+*   OUTPUTS: none
+*   RETURN VALUE: none
+*   SIDE EFFECTS: unmaps a program from a page directory entry
+*/
+void unmap_program(int32_t pid) {
+    page_directory[PROGRAM_IMAGE_PD_IDX].present = 0;
+    page_directory[PROGRAM_IMAGE_PD_IDX].user_supervisor = 0;
+    page_directory[PROGRAM_IMAGE_PD_IDX].cache_disable = 1;
+    page_directory[PROGRAM_IMAGE_PD_IDX].page_table_addr = 0;
     flush_tlb();
 }
 

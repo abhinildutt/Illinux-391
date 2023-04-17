@@ -70,7 +70,9 @@ int32_t term_read(fd_array_member_t* f, void* buf, int32_t nbytes) {
     if (buf == NULL) return -1;
 
     sti();
-    while (done_typing == 0);
+    while (done_typing == 0) {
+        asm volatile("hlt");
+    }
     cli();
 
     int i;

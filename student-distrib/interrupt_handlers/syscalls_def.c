@@ -26,8 +26,8 @@ int32_t halt(uint8_t status) {
     for (i = 0; i < MAX_FILE_COUNT; i++) {
         fs_interface_close(&curr_pcb->fd_array[i]);
     }
+    // Disable current task
     curr_pcb->active = 0;
-    // printf("parent: %d\n", curr_pcb->parent_pid);
     if (curr_pcb->parent_pid != -1) { // parent exists, return to parent
         map_program(curr_pcb->parent_pid);
         tss.ss0 = KERNEL_DS;
@@ -65,9 +65,10 @@ int32_t halt(uint8_t status) {
  *   INPUTS: command -- command to execute
  *   OUTPUTS: none
  *   RETURN VALUE: 0 if successful, -1 if not successful
- *   SIDE EFFECTS: none */
+ *   SIDE EFFECTS: none 
+ */
 int32_t execute(const uint8_t* command) {
-    printf("syscall %s (command=%s)\n", __FUNCTION__, command);
+    // printf("syscall %s (command=%s)\n", __FUNCTION__, command);
 
     // Validate command
     if (command == NULL) return -1;
@@ -90,25 +91,37 @@ int32_t execute(const uint8_t* command) {
             break;
         }
         if (command[i] != ' ') {
-            if (file_name_length >= FILE_NAME_LEN) return -1;
+            if (file_name_length >= FILE_NAME_LEN) {
+                sti();
+                return -1;
+            }
             file_name[file_name_length] = command[i];
             file_name_length++;
             i++;
         }
     }
-    if (file_name_length >= FILE_NAME_LEN) return -1;
+    if (file_name_length >= FILE_NAME_LEN) {
+        sti();
+        return -1;
+    }
     file_name[file_name_length] = '\0';
 
     while (i < cmd_len) {
         if(command[i] == ' ' && file_arg_length == 0) {
             continue;
         }
-        if (file_arg_length >= FILE_NAME_LEN) return -1;
+        if (file_arg_length >= FILE_NAME_LEN) {
+            sti();
+            return -1;
+        }
         file_arg[file_arg_length] = command[i];
         file_arg_length++;
         i++;
     }
-    if (file_arg_length >= FILE_NAME_LEN) return -1;
+    if (file_arg_length >= FILE_NAME_LEN) {
+        sti();
+        return -1;
+    }
     file_arg[file_arg_length] = '\0';
     // printf("parsed cmd (filename=%s, len=%d)\n", file_name, file_name_length);
 
@@ -118,19 +131,31 @@ int32_t execute(const uint8_t* command) {
     uint32_t prog_eip;
 
     // printf("reading file %s...\n", file_name);
-    if (read_dentry_by_name(file_name, &syscall_dentry) == -1) return -1; // file exists or not
+    // file exists or not
+    if (read_dentry_by_name(file_name, &syscall_dentry) == -1) {
+        sti();
+        return -1;
+    }
     // printf("file exists\n");
-    if (read_data(syscall_dentry.inode_num, 0, file_data_top4B, sizeof(int32_t)) == -1) return -1; // file reading errors
+    // file reading errors
+    if (read_data(syscall_dentry.inode_num, 0, file_data_top4B, sizeof(int32_t)) == -1) {
+        sti();
+        return -1;
+    }
     // printf("file read properly\n");
     //The first 4 bytes of the file represent a “magic number” that identifies the file as an executable. These
     // bytes are, respectively, 0: 0x7f; 1: 0x45; 2: 0x4c; 3: 0x46.
-    if (file_data_top4B[0] != 0x7f || file_data_top4B[1] != 0x45 || file_data_top4B[2] != 0x4c || file_data_top4B[3] != 0x46) return -1; // file is not exe
+    if (file_data_top4B[0] != 0x7f || file_data_top4B[1] != 0x45 || file_data_top4B[2] != 0x4c || file_data_top4B[3] != 0x46) {
+        sti();
+        return -1; // file is not exe
+    }
     // printf("file magic correct\n");
 
     // Get new PID
     int32_t new_pid = get_new_pid(); 
     if (new_pid == -1) {
         printf("NO AVAILABLE PID's\n");
+        sti();
         return -1;
     }
 
@@ -202,8 +227,8 @@ int32_t execute(const uint8_t* command) {
     // $0 = USER_DS, $1 = USER_ESP, $2 = USER_CS, $3 = prog_eip
     
     // OSDev wiki and hardware context switch DIAGRAM in mp3 appendix
-    asm volatile(
-        " movw %%ax, %%ds   ;\
+    asm volatile(" \
+        movw %%ax, %%ds    ;\
         pushl %%eax        ;\
         movl %%ebx, %%eax  ;\
         pushl %%eax        ;\
@@ -232,6 +257,8 @@ int32_t execute(const uint8_t* command) {
 int32_t read(int32_t fd, void* buf, int32_t nbytes) {
     // printf("syscall %s %d %d\n", __FUNCTION__, fd, nbytes);
     if (fd >= MAX_FILE_COUNT || fd < 0) return -1;
+    if (buf == NULL) return -1;
+    if (nbytes < 0) return -1;
     curr_pcb = get_pcb(curr_pid);
     return fs_interface_read(&curr_pcb->fd_array[fd], buf, nbytes);
 }
@@ -244,11 +271,14 @@ int32_t read(int32_t fd, void* buf, int32_t nbytes) {
  *           nbytes -- number of bytes to write
  *   OUTPUTS: none
  *   RETURN VALUE: number of bytes written
- *   SIDE EFFECTS: none */
+ *   SIDE EFFECTS: none
+ */
 int32_t write(int32_t fd, const void* buf, int32_t nbytes) {
     // printf("syscall %s\n", __FUNCTION__);
 
     if (fd >= MAX_FILE_COUNT || fd < 0) return -1;
+    if (buf == NULL) return -1;
+    if (nbytes < 0) return -1;
     curr_pcb = get_pcb(curr_pid);
     return fs_interface_write(&curr_pcb->fd_array[fd], buf, nbytes);
 }
@@ -256,44 +286,47 @@ int32_t write(int32_t fd, const void* buf, int32_t nbytes) {
 /* 
  * open
  *   DESCRIPTION: provides access to the file system. Find the directory entry corresponding to the
-named file, allocates an unused file descriptor, and sets up any data necessary to
-handle the given type of file (directory, RTC device, or regular file)
+ *                named file, allocates an unused file descriptor, and sets up any data necessary to
+ *                handle the given type of file (directory, RTC device, or regular file).
  *   INPUTS: filename -- name of file to open
  *   OUTPUTS: none
  *   RETURN VALUE: file descriptor
- *   SIDE EFFECTS: none */
+ *   SIDE EFFECTS: none 
+ */
 int32_t open(const uint8_t* filename) {
     // printf("syscall %s\n", __FUNCTION__);
-    if (filename == NULL) {
-        return -1;
-    }
+    if (filename == NULL) return -1;
+
+    curr_pcb = get_pcb(curr_pid);
+    if (curr_pcb == NULL) return -1;
 
     dentry_t syscall_dentry;
     fd_array_member_t* f;
-    curr_pcb = get_pcb(curr_pid);
-
-    if (curr_pcb == NULL) {
-        return -1;
-    }
-
     int fd;
     for (fd = 0; fd < MAX_FILE_COUNT; fd++) {
         f = &curr_pcb->fd_array[fd];
         if (f->flags == 0) {
+            // Check if file exists
             if (read_dentry_by_name(filename, &syscall_dentry) == -1) return -1;
 
             int type = syscall_dentry.filetype;
-            if (type == 0) {
-                f->fops = &rtc_fops;
-                f->inode = 0;
-            } else if (type == 1) {
-                f->fops = &directory_fops;
-                f->inode = 0;
-            } else if (type == 2) {
-                f->fops = &regular_fops;
-                f->inode = syscall_dentry.inode_num; // this is something look at future.
+            printf("Opening file of type %d...\n", type);
+            switch (type) {
+                case FILE_TYPE_RTC:
+                    f->fops = &rtc_fops;
+                    f->inode = 0;
+                    break;
+                case FILE_TYPE_DIR:
+                    f->fops = &directory_fops;
+                    f->inode = 0;
+                    break;
+                case FILE_TYPE_FILE:
+                    f->fops = &regular_fops;
+                    f->inode = syscall_dentry.inode_num;
+                    break;
             }
 
+            // Failed to open file
             if (fs_interface_open(f, filename) == -1) return -1;
             f->file_pos = 0;
             f->flags = 1;

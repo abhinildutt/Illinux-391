@@ -109,10 +109,11 @@ int32_t execute(const uint8_t* command) {
         sti();
         return -1;
     }
-    // file_name[file_name_length] = '\0'; // Might not need this
+    file_name[file_name_length] = '\0'; // Might not need this
 
     while (i < cmd_len) {
         if(command[i] == ' ' && file_arg_length == 0) {
+            i++;
             continue;
         }
         if (file_arg_length >= FILE_NAME_LEN) {
@@ -186,8 +187,9 @@ int32_t execute(const uint8_t* command) {
     fs_interface_init(pcb->fd_array);
 
     // store file_arg in task state (pcb)
-
-    pcb->file_arg = file_arg;
+    for (i = 0; i < FILE_NAME_LEN; i++) {
+        pcb->file_arg[i] = file_arg[i];
+    }
 
     // Setup PCB struct
     pcb->pid = new_pid;
@@ -306,7 +308,7 @@ int32_t write(int32_t fd, const void* buf, int32_t nbytes) {
  *   SIDE EFFECTS: none 
  */
 int32_t open(const uint8_t* filename) {
-    // printf("syscall %s\n", __FUNCTION__);
+    printf("syscall %s\n", __FUNCTION__);
     if (filename == NULL) return -1;
 
     curr_pcb = get_pcb(curr_pid);
@@ -367,11 +369,30 @@ int32_t close(int32_t fd) {
     return fs_interface_close(&curr_pcb->fd_array[fd]);
 }
 
+/* 
+ * getargs
+ *   DESCRIPTION: copies the command line arguments into a user-level buffer
+ *   INPUTS: buf -- buffer to copy arguments into
+ *           nbytes -- number of bytes to copy
+ *   OUTPUTS: none
+ *   RETURN VALUE: 0 on success, -1 on failure
+ *   SIDE EFFECTS: none */
 int32_t getargs(uint8_t* buf, int32_t nbytes) {
     printf("syscall %s\n", __FUNCTION__);
+
+    if (buf == NULL) return -1;
     
     pcb_t* pcb = get_pcb(curr_pid);
-    uint8_t file_arg[FILE_NAME_LEN] = pcb->file_arg; 
+    uint8_t file_arg[FILE_NAME_LEN];
+
+    // printf("file_arg: %s file_len: %d\n", pcb->file_arg, strlen((int8_t*)pcb->file_arg));
+    // nbytes = (nbytes > FILE_NAME_LEN) ? FILE_NAME_LEN : nbytes;
+    // printf("nbytes: %d\n", nbytes);
+
+    int i;
+    for(i = 0; i < FILE_NAME_LEN; i++) {
+        file_arg[i] = pcb->file_arg[i];
+    }
 
     if(file_arg == NULL || file_arg[0] == '\0' || file_arg[FILE_NAME_LEN - 1] != '\0') return -1;
 
@@ -387,7 +408,7 @@ int32_t vidmap(uint8_t** screen_start) {
     if(screen_start < USER_STACK_VIRTUAL_ADDR) return -1;
     if(screen_start > USER_STACK_VIRTUAL_ADDR + PAGE_SIZE_4MB) return -1;
 
-    uint32_t DIRECTORY_INDEX = (uint32_t*)screen_start / PAGE_SIZE_4MB;
+    // uint32_t DIRECTORY_INDEX = (uint32_t*)screen_start / PAGE_SIZE_4MB;
 
     return 0;
 }

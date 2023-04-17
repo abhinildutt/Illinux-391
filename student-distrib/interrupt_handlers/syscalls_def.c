@@ -153,6 +153,10 @@ int32_t execute(const uint8_t* command) {
     pcb_t* pcb = get_pcb(new_pid);
     fs_interface_init(pcb->fd_array);
 
+    // store file_arg in task state (pcb)
+
+    pcb->file_arg = file_arg;
+
     // Setup PCB struct
     pcb->pid = new_pid;
     pcb->parent_pid = curr_pid;
@@ -319,12 +323,27 @@ int32_t close(int32_t fd) {
 }
 
 int32_t getargs(uint8_t* buf, int32_t nbytes) {
-    // printf("syscall %s\n", __FUNCTION__);
+    printf("syscall %s\n", __FUNCTION__);
+    
+    pcb_t* pcb = get_pcb(curr_pid);
+    uint8_t file_arg[FILE_NAME_LEN] = pcb->file_arg; 
+
+    if(file_arg == NULL || file_arg[0] == '\0' || file_arg[FILE_NAME_LEN - 1] != '\0') return -1;
+
+    memcpy((uint8_t*)buf, (uint8_t*)file_arg, nbytes);
+
     return 0;
 }
 
 int32_t vidmap(uint8_t** screen_start) {
-    // printf("syscall %s\n", __FUNCTION__);
+    printf("syscall %s\n", __FUNCTION__);
+    // 8040000
+    if(screen_start == NULL) return -1;
+    if(screen_start < USER_STACK_VIRTUAL_ADDR) return -1;
+    if(screen_start > USER_STACK_VIRTUAL_ADDR + PAGE_SIZE_4MB) return -1;
+
+    uint32_t DIRECTORY_INDEX = (uint32_t*)screen_start / PAGE_SIZE_4MB;
+
     return 0;
 }
 

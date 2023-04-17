@@ -19,7 +19,7 @@
 
 #define KERNEL_STACK_ADDR 0x800000
 #define USER_KERNEL_STACK_SIZE 0x2000
-#define USER_STACK_VIRTUAL_ADDR 0x08000000
+#define USER_STACK_VIRTUAL_ADDR 0x08000000 // 128 MB
 
 typedef struct __attribute__((packed)) page_directory_entry_t {
     uint32_t present : 1;           // 0

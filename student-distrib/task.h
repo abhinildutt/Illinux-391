@@ -6,6 +6,7 @@
 
 #define MAX_FILE_COUNT 8
 #define MAX_PID_COUNT 2
+#define FILE_NAME_LEN 32
 
 typedef struct pcb {
     int32_t pid;
@@ -14,6 +15,7 @@ typedef struct pcb {
     uint32_t esp;
     uint32_t eip;
     uint32_t ebp;
+    uint8_t file_arg[FILE_NAME_LEN];
     uint32_t active;
 } pcb_t;
 

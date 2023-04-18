@@ -55,10 +55,10 @@ int32_t term_open(fd_array_member_t* f, const uint8_t* filename) {
 
 /* Terminal Close
     * Inputs: none
-    * Return Value: 0
-    * Function: Closes the terminal */
+    * Return Value: -1
+    * Function: Doesn't do anything, since can't close terminal */
 int32_t term_close(fd_array_member_t* f) {
-    return 0;
+    return -1;
 }
 
 /* Terminal Read
@@ -96,7 +96,11 @@ int32_t term_read(fd_array_member_t* f, void* buf, int32_t nbytes) {
 int32_t term_write(fd_array_member_t* f, const void* buf, int32_t nbytes) {
     if (buf == NULL) return -1;
     int i;
+    // char c;
     for (i = 0; i < nbytes; i++) {
+        // if ((c = ((char *) buf)[i]) == '\0') {
+        //     return i;
+        // }
         putc(((char *) buf)[i]);
     }
     return nbytes;

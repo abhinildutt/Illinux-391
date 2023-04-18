@@ -1,0 +1,17 @@
+Cat was hitting a page fault after reading from a file
+- Solution: we weren't checking if file offset went beyond the file (inode->size), so we now return 0 for end of file 
+
+Vidmap page table wasn't being accessed
+- Solution: we were using a 4MB page for the page directory entry on accident, which completely bypassed the page table.
+
+Vidmap test wouldn't pass
+- Solution: test runs in kernel mode, so we comment out the user mode pointer check
+
+ls wasn't printing newlines
+- Solution: terminal write should write all nbytes, ignoring null terminators
+
+Closing the terminal fails but marks it as closed
+- Solution: check the result of the closing before flagging the file descriptor as unused
+
+Read/write/close on unused file descriptors were possible
+- Solution: check the used flag for the target file descriptor

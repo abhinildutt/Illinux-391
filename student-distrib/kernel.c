@@ -17,7 +17,7 @@
 #include "devices/terminal.h"
 #include "interrupt_handlers/syscalls_def.h"
 
-#define RUN_TESTS
+// #define RUN_TESTS
 
 /* Macros. */
 /* Check if the bit BIT in FLAGS is set. */
@@ -172,12 +172,11 @@ void entry(unsigned long magic, unsigned long addr) {
 
 #ifdef RUN_TESTS
     /* Run tests */
-    // launch_tests();
-#endif
-
+    launch_tests();
+#else
     /* Execute the first program ("shell") ... */
     execute((const uint8_t*) "shell");
-    // clear();
+#endif
 
     /* Spin (nicely, so we don't chew up cycles) */
     asm volatile (".1: hlt; jmp .1;");

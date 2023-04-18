@@ -87,17 +87,17 @@ int32_t read_dentry_by_index (uint32_t index, dentry_t* dentry) {
  *   RETURN VALUE: num bytes read if successful, -1 if not successful
  *   SIDE EFFECTS: fills the buffer
  */
-int32_t read_data (uint32_t inode, uint32_t offset, uint8_t* buf, uint32_t length){
-    if (inode >= boot_block_ptr->num_inodes || buf == NULL) {
-        return -1;
-    }
+int32_t read_data (uint32_t inode, uint32_t offset, uint8_t* buf, uint32_t length) {
+    if (inode >= boot_block_ptr->num_inodes || buf == NULL) return -1;
     inode_t* curr_inode_ptr = (inode_t*)(&(inode_ptr[inode]));
+    // offset beyond size of file, reached end of file
+    if (offset >= curr_inode_ptr->length) return 0;
 
     // Get the data block number
     uint32_t data_block_idx = offset / BLOCK_SIZE;
     uint32_t data_block_offset = offset % BLOCK_SIZE;
     uint32_t curr_data_block_num = curr_inode_ptr->data_block_num[data_block_idx];
-
+    // printf("offset: %d data_block_idx: %d\n", offset, data_block_idx);
     
     uint32_t bytes_read = 0;
 
@@ -124,7 +124,7 @@ int32_t read_data (uint32_t inode, uint32_t offset, uint8_t* buf, uint32_t lengt
         bytes_read++;
         data_block_offset++;
     }
-
+    // printf("read: %d\n", bytes_read);
     return bytes_read;
 }
 
@@ -140,8 +140,8 @@ int32_t file_open(fd_array_member_t* f, const uint8_t* filename){
     if (filename == NULL) {
         return -1;
     }
-    // Check if filename > 32 bytes
-    if (strlen((int8_t*)filename) > FILE_NAME_LEN) {
+    // Check if filename > 32 bytes + potentially 1 null byte
+    if (strlen((int8_t*)filename) > FILE_NAME_LEN + 1) {
         return -1;
     }
 

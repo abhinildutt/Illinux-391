@@ -26,6 +26,14 @@
     printf("[TEST %s] Running %s at %s:%d\n", __FUNCTION__, __FUNCTION__, __FILE__, __LINE__)
 #define TEST_OUTPUT(name, result)   \
     printf("[TEST %s] Result = %s\n", name, (result) ? "PASS" : "FAIL");
+#define SYSCALL(ret, number, arg1, arg2, arg3) \
+    asm volatile                                       \
+    (                                                  \
+        "int $0x80"                                    \
+        : "=a" (ret)                                   \
+        : "0"(number), "b"(arg1), "c"(arg2), "d"(arg3) \
+        : "memory"                                     \
+    );
 
 static inline void assertion_failure() {
     /* Use exception #15 for assertions, otherwise
@@ -1025,7 +1033,8 @@ int syscalls_std_read_write_test() {
     int ret;
 
     printf("-------------------SYSCALL STD READ-WRITE TEST----------------------\n");
-    curr_pcb = get_pcb(get_new_pid());
+    curr_pid = get_new_pid();
+    curr_pcb = get_pcb(curr_pid);
     fs_interface_init(curr_pcb->fd_array);
     int read_arg = 3;
     int write_arg = 4;
@@ -1071,9 +1080,10 @@ int syscalls_cat_test() {
     // const uint8_t* directory = (uint8_t*)".";
     // int32_t fd = dir_open(NULL, directory);
 
-    curr_pcb = get_pcb(get_new_pid());
+    curr_pid = get_new_pid();
+    curr_pcb = get_pcb(curr_pid);
     fs_interface_init(curr_pcb->fd_array);
-    int buffer_size = 187;
+    int buffer_size = 1024;
 
     char buf[buffer_size];
     const uint8_t* filename = (uint8_t*)"frame0.txt";
@@ -1087,6 +1097,7 @@ int syscalls_cat_test() {
             putc(buf[i]);
         }
     }
+    printf("%d\n", read(fd, buf, buffer_size));
 
     return result;
 }
@@ -1104,7 +1115,8 @@ int syscalls_open_test() {
     int ret;
     printf("-------------------SYSCALL OPEN TEST----------------------\n");
     int open_arg = 5;
-    curr_pcb = get_pcb(get_new_pid());
+    curr_pid = get_new_pid();
+    curr_pcb = get_pcb(curr_pid);
     fs_interface_init(curr_pcb->fd_array);
     const uint8_t* filename = (uint8_t*)"frame0.txt";
     asm volatile
@@ -1128,6 +1140,75 @@ int syscalls_open_test() {
 }
 
 /* Checkpoint 4 tests */
+/* Syscall Test - Vidmap
+    * 
+    * Asserts that we can map the video memory to a virtual address
+    * Inputs: None
+    * Outputs: PASS/FAIL
+    * Side Effects: None
+    * Coverage: Syscall
+    * Files: syscall.c/h */
+int syscalls_vidmap_test() {
+    TEST_HEADER;
+    int ret = 0;
+    printf("-------------------SYSCALL VIDMAP TEST----------------------\n");
+    curr_pid = get_new_pid();
+    curr_pcb = get_pcb(curr_pid);
+    fs_interface_init(curr_pcb->fd_array);
+
+    int vidmap_arg = 8;
+    SYSCALL(ret, vidmap_arg, 0x0, NULL, NULL);
+    if (ret != -1) return FAIL;
+    SYSCALL(ret, vidmap_arg, 0x400000, NULL, NULL);
+    if (ret != -1) return FAIL;
+
+    uint8_t* buffer = 0x0;
+    uint8_t** buffer_ptr = &buffer;
+    
+    SYSCALL(ret, vidmap_arg, buffer_ptr, NULL, NULL);
+    printf("returned: %d | addr = 0x%#x\n", ret, buffer);
+
+    if (ret == -1) {
+        printf("Failed to map video memory\n");
+        return FAIL;
+    }
+
+    video_mem = (char*) buffer;
+    printf("hello, world with virtual addr\n");
+
+    video_mem = (char*) VIDEO_MEM;
+    printf("hello, world with physical addr\n");
+
+    return ret != -1;
+}
+
+/* Syscall Test - Invalid
+    * 
+    * Asserts that passing invalid values to the syscall handler returns -1
+    * Inputs: None
+    * Outputs: PASS/FAIL
+    * Coverage: Syscall
+    * Files: syscall.c/h */
+int syscalls_invalid_test() {
+    TEST_HEADER;
+    int ret = 0;
+    printf("-------------------SYSCALL RANDOM TEST----------------------\n");
+    curr_pid = get_new_pid();
+    curr_pcb = get_pcb(curr_pid);
+    fs_interface_init(curr_pcb->fd_array);
+
+    int random_arg = 23402384;
+
+    SYSCALL(ret, random_arg, NULL, NULL, NULL);
+    if (ret != -1) return FAIL;
+    SYSCALL(ret, 0, NULL, NULL, NULL);
+    if (ret != -1) return FAIL;
+    SYSCALL(ret, -random_arg, NULL, NULL, NULL);
+    if (ret != -1) return FAIL;
+
+    return PASS;
+}
+
 /* Checkpoint 5 tests */
 
 
@@ -1167,4 +1248,8 @@ void launch_tests() {
     // TEST_OUTPUT("test_syscall_read_write", syscalls_read_write_test());
     // TEST_OUTPUT("test_syscall_std_read_write", syscalls_std_read_write_test());
     // TEST_OUTPUT("test_syscall_cat", syscalls_cat_test());
+
+    // Checkpoint 4 tests
+    TEST_OUTPUT("test_syscall_vidmap", syscalls_vidmap_test());
+    // TEST_OUTPUT("test_syscalls_invalid", syscalls_invalid_test());
 }

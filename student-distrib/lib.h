@@ -10,6 +10,8 @@
 #define MIN(a,b) (((a)<(b))?(a):(b))
 #define MAX(a,b) (((a)>(b))?(a):(b))
 
+extern char* video_mem;
+
 int32_t printf(int8_t *format, ...);
 void scroll();
 void putc(uint8_t c);

@@ -10,7 +10,7 @@
 #define NUM_ROWS    25
 #define ATTRIB      0x7
 
-static char* video_mem = (char *)VIDEO;
+char* video_mem = (char *)VIDEO;
 
 /* void clear(void);
  * Inputs: void

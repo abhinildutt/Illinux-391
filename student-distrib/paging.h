@@ -16,6 +16,9 @@
 #define PROGRAM_IMAGE_PD_IDX (PROGRAM_IMAGE_VIRTUAL_ADDR >> 22)
 #define PROGRAM_IMAGE_OFFSET 0x00048000
 #define PROGRAM_ENTRY_POINT 24
+// index 33, right after the program image
+#define PROGRAM_VIDEO_PD_IDX ((PROGRAM_IMAGE_VIRTUAL_ADDR + PAGE_SIZE_4MB) >> 22)
+#define PROGRAM_VIDEO_VIRUTAL_ADDR (PROGRAM_IMAGE_VIRTUAL_ADDR + PAGE_SIZE_4MB + VIDEO_MEM)
 
 #define KERNEL_STACK_ADDR 0x800000
 #define USER_KERNEL_STACK_SIZE 0x2000
@@ -53,9 +56,13 @@ typedef struct __attribute__((packed)) page_table_entry_t {
 
 page_directory_entry_t page_directory[TABLE_SIZE] __attribute__((aligned(PAGE_SIZE_4KB)));
 page_table_entry_t page_table[TABLE_SIZE] __attribute__((aligned(PAGE_SIZE_4KB)));
+page_table_entry_t vidmap_page_table[TABLE_SIZE] __attribute__((aligned(PAGE_SIZE_4KB)));
 
 void initialize_paging();
 void map_program(int32_t pid);
+void unmap_program(int32_t pid);
+void map_video_mem();
+void unmap_video_mem();
 void flush_tlb();
 
 #endif

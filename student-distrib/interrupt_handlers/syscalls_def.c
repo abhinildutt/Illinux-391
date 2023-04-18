@@ -84,15 +84,16 @@ int32_t execute(const uint8_t* command) {
     // Parse command
     uint32_t cmd_len = strlen((int8_t*) command);
 
-    uint8_t file_name[FILE_NAME_LEN];
+    uint8_t file_name[FILE_NAME_LEN + 1];
     int file_name_length = 0;
 
-    uint8_t file_arg[FILE_NAME_LEN];
+    uint8_t file_arg[FILE_NAME_LEN + 1];
     int file_arg_length = 0;
 
     int i = 0;
     while (i < cmd_len) {
         if (command[i] == ' ' && file_name_length > 0) {
+            i++;
             break;
         }
         if (command[i] != ' ') {
@@ -112,7 +113,7 @@ int32_t execute(const uint8_t* command) {
     file_name[file_name_length] = '\0'; // Might not need this
 
     while (i < cmd_len) {
-        if(command[i] == ' ' && file_arg_length == 0) {
+        if (command[i] == ' ' && file_arg_length == 0) {
             i++;
             continue;
         }
@@ -130,7 +131,7 @@ int32_t execute(const uint8_t* command) {
         return -1;
     }
     file_arg[file_arg_length] = '\0';
-    // printf("parsed cmd (filename=%s, len=%d)\n", file_name, file_name_length);
+    printf("parsed cmd (filename=%s, args=%s, len=%d)\n", file_name, file_arg, file_name_length);
 
     // File header checks
     dentry_t syscall_dentry;
@@ -179,7 +180,7 @@ int32_t execute(const uint8_t* command) {
     // printf("length = %#x\n", inode_ptr[syscall_dentry.inode_num].length);
     read_data(syscall_dentry.inode_num, 0, (uint8_t*) PROGRAM_IMAGE_VIRTUAL_ADDR, inode_ptr[syscall_dentry.inode_num].length);
 
-    // printf("loaded to %#x\nread %d bytes\n", PROGRAM_IMAGE_VIRTUAL_ADDR, br);
+    // printf("loaded to %#x\n", PROGRAM_IMAGE_VIRTUAL_ADDR);
     // printf("header = %#x\n", *((uint32_t*) (PROGRAM_IMAGE_VIRTUAL_ADDR)));
 
     // Init new FS array
@@ -187,9 +188,7 @@ int32_t execute(const uint8_t* command) {
     fs_interface_init(pcb->fd_array);
 
     // store file_arg in task state (pcb)
-    for (i = 0; i < FILE_NAME_LEN; i++) {
-        pcb->file_arg[i] = file_arg[i];
-    }
+    strncpy((int8_t*) pcb->file_arg, (int8_t*) file_arg, FILE_NAME_LEN + 1);
 
     // Setup PCB struct
     pcb->pid = new_pid;
@@ -379,46 +378,43 @@ int32_t close(int32_t fd) {
  *   SIDE EFFECTS: none */
 int32_t getargs(uint8_t* buf, int32_t nbytes) {
     printf("syscall %s\n", __FUNCTION__);
-
     if (buf == NULL) return -1;
-    
-    pcb_t* pcb = get_pcb(curr_pid);
-    uint8_t file_arg[FILE_NAME_LEN];
 
-    // printf("file_arg: %s file_len: %d\n", pcb->file_arg, strlen((int8_t*)pcb->file_arg));
-    // nbytes = (nbytes > FILE_NAME_LEN) ? FILE_NAME_LEN : nbytes;
-    // printf("nbytes: %d\n", nbytes);
+    uint8_t* file_arg = curr_pcb->file_arg; 
+    if (file_arg == NULL || file_arg[0] == '\0') return -1;
 
-    int i;
-    for(i = 0; i < FILE_NAME_LEN; i++) {
-        file_arg[i] = pcb->file_arg[i];
-    }
-
-    if(file_arg == NULL || file_arg[0] == '\0' || file_arg[FILE_NAME_LEN - 1] != '\0') return -1;
-
-    memcpy((uint8_t*)buf, (uint8_t*)file_arg, nbytes);
-
+    printf("file_arg: %s, len: %d\n", file_arg, strlen((int8_t*) file_arg));
+    strcpy((int8_t*) buf, (int8_t*) file_arg);
     return 0;
 }
 
+/*
+    * vidmap
+    *   DESCRIPTION: maps the text-mode video memory into user space at a pre-set virtual address
+    *   INPUTS: screen_start -- pointer to the virtual address to map video memory to
+    *   OUTPUTS: none
+    *   RETURN VALUE: 0 on success, -1 on failure
+    *   SIDE EFFECTS: none */
 int32_t vidmap(uint8_t** screen_start) {
     printf("syscall %s\n", __FUNCTION__);
     // 8040000
-    if(screen_start == NULL) return -1;
-    if(screen_start < USER_STACK_VIRTUAL_ADDR) return -1;
-    if(screen_start > USER_STACK_VIRTUAL_ADDR + PAGE_SIZE_4MB) return -1;
+    // Check if screen_start is an userspace address
+    if (screen_start == NULL) return -1;
+    if ((uint32_t) screen_start < USER_STACK_VIRTUAL_ADDR) return -1;
+    if ((uint32_t) screen_start > USER_STACK_VIRTUAL_ADDR + PAGE_SIZE_4MB) return -1;
 
-    // uint32_t DIRECTORY_INDEX = (uint32_t*)screen_start / PAGE_SIZE_4MB;
-
+    map_video_mem();
+    // write virtual video memory addr to screen_start
+    *screen_start = (uint8_t*) PROGRAM_VIDEO_VIRUTAL_ADDR;
     return 0;
 }
 
 int32_t set_handler(int32_t signum, void* handler_address) {
     // printf("syscall %s\n", __FUNCTION__);
-    return 0;
+    return -1;
 }
 
 int32_t sigreturn(void) {
     // printf("syscall %s\n", __FUNCTION__);
-    return 0;
+    return -1;
 }

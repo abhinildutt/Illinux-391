@@ -37,8 +37,7 @@ int32_t fs_interface_init(fd_array_member_t* fd_array) {
 *   SIDE EFFECTS: fills the buffer
 */
 int32_t fs_interface_read(fd_array_member_t* f, void* buf, int32_t nbytes) {
-    if (f->fops == NULL) return -1;
-    if (f->fops->read == NULL) return -1;
+    if (buf == NULL || f->fops == NULL || f->fops->read == NULL) return -1;
     return f->fops->read(f, buf, nbytes);
 }
 
@@ -53,8 +52,7 @@ int32_t fs_interface_read(fd_array_member_t* f, void* buf, int32_t nbytes) {
 *   SIDE EFFECTS: none
 */
 int32_t fs_interface_write(fd_array_member_t* f, const void* buf, int32_t nbytes) {
-    if (f->fops == NULL) return -1;
-    if (f->fops->write == NULL) return -1;
+    if (buf == NULL || f->fops == NULL || f->fops->write == NULL) return -1;
     return f->fops->write(f, buf, nbytes);
 }
 

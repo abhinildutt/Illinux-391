@@ -1079,9 +1079,10 @@ int syscalls_cat_test() {
     // const uint8_t* directory = (uint8_t*)".";
     // int32_t fd = dir_open(NULL, directory);
 
-    curr_pcb = get_pcb(get_new_pid());
+    curr_pid = get_new_pid();
+    curr_pcb = get_pcb(curr_pid);
     fs_interface_init(curr_pcb->fd_array);
-    int buffer_size = 187;
+    int buffer_size = 1024;
 
     char buf[buffer_size];
     const uint8_t* filename = (uint8_t*)"frame0.txt";
@@ -1095,6 +1096,7 @@ int syscalls_cat_test() {
             putc(buf[i]);
         }
     }
+    printf("%d\n", read(fd, buf, buffer_size));
 
     return result;
 }
@@ -1174,5 +1176,5 @@ void launch_tests() {
     // TEST_OUTPUT("test_syscall_read", syscalls_read_test());
     // TEST_OUTPUT("test_syscall_read_write", syscalls_read_write_test());
     // TEST_OUTPUT("test_syscall_std_read_write", syscalls_std_read_write_test());
-    // TEST_OUTPUT("test_syscall_cat", syscalls_cat_test());
+    TEST_OUTPUT("test_syscall_cat", syscalls_cat_test());
 }

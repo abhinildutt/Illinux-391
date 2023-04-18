@@ -37,7 +37,7 @@ int32_t fs_interface_init(fd_array_member_t* fd_array) {
 *   SIDE EFFECTS: fills the buffer
 */
 int32_t fs_interface_read(fd_array_member_t* f, void* buf, int32_t nbytes) {
-    if (buf == NULL || f->fops == NULL || f->fops->read == NULL) return -1;
+    if (buf == NULL || f->fops == NULL || f->fops->read == NULL || f->flags == 0) return -1;
     return f->fops->read(f, buf, nbytes);
 }
 
@@ -52,7 +52,7 @@ int32_t fs_interface_read(fd_array_member_t* f, void* buf, int32_t nbytes) {
 *   SIDE EFFECTS: none
 */
 int32_t fs_interface_write(fd_array_member_t* f, const void* buf, int32_t nbytes) {
-    if (buf == NULL || f->fops == NULL || f->fops->write == NULL) return -1;
+    if (buf == NULL || f->fops == NULL || f->fops->write == NULL || f->flags == 0) return -1;
     return f->fops->write(f, buf, nbytes);
 }
 
@@ -68,6 +68,7 @@ int32_t fs_interface_write(fd_array_member_t* f, const void* buf, int32_t nbytes
 int32_t fs_interface_open(fd_array_member_t* f, const uint8_t* filename) {
     if (f->fops == NULL) return -1;
     if (f->fops->open == NULL) return -1;
+    if (f->flags == 1) return -1;
     return f->fops->open(f, filename);
 }
 
@@ -84,8 +85,12 @@ int32_t fs_interface_close(fd_array_member_t* f) {
     if (f->fops->close == NULL) return -1;
     if (f->flags == 0) return -1;
 
-    f->flags = 0;
-    f->file_pos = 0;
-    f->inode = 0;
-    return f->fops->close(f);
+    int32_t ret;
+    if ((ret = f->fops->close(f)) != -1) {
+        f->flags = 0;
+        f->file_pos = 0;
+        f->inode = 0;
+        return ret;
+    }
+    return -1;
 }

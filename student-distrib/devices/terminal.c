@@ -55,10 +55,10 @@ int32_t term_open(fd_array_member_t* f, const uint8_t* filename) {
 
 /* Terminal Close
     * Inputs: none
-    * Return Value: 0
-    * Function: Closes the terminal */
+    * Return Value: -1
+    * Function: Doesn't do anything, since can't close terminal */
 int32_t term_close(fd_array_member_t* f) {
-    return 0;
+    return -1;
 }
 
 /* Terminal Read

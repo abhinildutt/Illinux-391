@@ -32,11 +32,11 @@ syscall_table:
  */
 syscall_handler:
     # syscall 0 doesn't exist
-    CMPL $0, %EAX
-    JE syscall_handler_failed
+    CMP $1, %EAX
+    JL syscall_handler_failed
 
     # syscall 10 is the max
-    CMPL $10, %EAX
+    CMP $10, %EAX
     JG syscall_handler_failed
 
     # Save all general registers

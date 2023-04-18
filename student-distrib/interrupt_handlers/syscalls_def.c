@@ -322,7 +322,7 @@ int32_t open(const uint8_t* filename) {
             if (read_dentry_by_name(filename, &syscall_dentry) == -1) return -1;
 
             int type = syscall_dentry.filetype;
-            printf("Opening file of type %d...\n", type);
+            // printf("Opening file of type %d...\n", type);
             switch (type) {
                 case FILE_TYPE_RTC:
                     f->fops = &rtc_fops;
@@ -361,9 +361,7 @@ int32_t close(int32_t fd) {
     // printf("syscall %s\n", __FUNCTION__);
     if (fd >= MAX_FILE_COUNT || fd < 0) return -1;
     curr_pcb = get_pcb(curr_pid);
-    if (curr_pcb == NULL) {
-        return -1;
-    }
+    if (curr_pcb == NULL) return -1;
     return fs_interface_close(&curr_pcb->fd_array[fd]);
 }
 
@@ -381,7 +379,7 @@ int32_t getargs(uint8_t* buf, int32_t nbytes) {
 }
 
 int32_t vidmap(uint8_t** screen_start) {
-    printf("syscall %s\n", __FUNCTION__);
+    // printf("syscall %s\n", __FUNCTION__);
     // 8040000
     // Check if screen_start is an userspace address
     if (screen_start == NULL) return -1;
@@ -391,11 +389,6 @@ int32_t vidmap(uint8_t** screen_start) {
     map_video_mem();
     // write virtual video memory addr to screen_start
     *screen_start = (uint8_t*) PROGRAM_VIDEO_VIRTUAL_ADDR;
-    // int32_t i;
-    // for (i = 0; i < 80 * 25; i++) {
-    //     *(uint8_t *)(PROGRAM_VIDEO_VIRTUAL_ADDR + (i << 1)) = ' ';
-    //     *(uint8_t *)(PROGRAM_VIDEO_VIRTUAL_ADDR + (i << 1) + 1) = 0x7;
-    // }
     return 0;
 }
 

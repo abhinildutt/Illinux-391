@@ -1250,6 +1250,6 @@ void launch_tests() {
     // TEST_OUTPUT("test_syscall_cat", syscalls_cat_test());
 
     // Checkpoint 4 tests
-    TEST_OUTPUT("test_syscall_vidmap", syscalls_vidmap_test());
-    // TEST_OUTPUT("test_syscalls_invalid", syscalls_invalid_test());
+    // TEST_OUTPUT("test_syscall_vidmap", syscalls_vidmap_test());
+    TEST_OUTPUT("test_syscalls_invalid", syscalls_invalid_test());
 }

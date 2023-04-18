@@ -395,10 +395,6 @@ int32_t getargs(uint8_t* buf, int32_t nbytes) {
     *   SIDE EFFECTS: none */
 int32_t vidmap(uint8_t** screen_start) {
     // printf("syscall %s\n", __FUNCTION__);
-<<<<<<< HEAD
-    // 8040000
-=======
->>>>>>> f37cfe6a1580f93a91dc096ccb146ef288e7c1e0
     // Check if screen_start is an userspace address
     if (screen_start == NULL) return -1;
     if ((uint32_t) screen_start < USER_STACK_VIRTUAL_ADDR) return -1;

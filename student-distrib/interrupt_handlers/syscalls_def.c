@@ -268,6 +268,7 @@ int32_t execute(const uint8_t* command) {
  *   SIDE EFFECTS: none
  */
 int32_t read(int32_t fd, void* buf, int32_t nbytes) {
+    // printf("syscall %s (fd=%d)\n", __FUNCTION__, fd);
     if (fd >= MAX_FILE_COUNT || fd < 0) return -1;
     if (buf == NULL) return -1;
     if (nbytes < 0) return -1;
@@ -286,6 +287,7 @@ int32_t read(int32_t fd, void* buf, int32_t nbytes) {
  *   SIDE EFFECTS: none
  */
 int32_t write(int32_t fd, const void* buf, int32_t nbytes) {
+    // printf("syscall %s\n", __FUNCTION__);
     if (fd >= MAX_FILE_COUNT || fd < 0) return -1;
     if (buf == NULL) return -1;
     if (nbytes < 0) return -1;
@@ -304,7 +306,7 @@ int32_t write(int32_t fd, const void* buf, int32_t nbytes) {
  *   SIDE EFFECTS: none 
  */
 int32_t open(const uint8_t* filename) {
-    printf("syscall %s\n", __FUNCTION__);
+    // printf("syscall %s\n", __FUNCTION__);
     if (filename == NULL) return -1;
 
     curr_pcb = get_pcb(curr_pid);
@@ -320,7 +322,7 @@ int32_t open(const uint8_t* filename) {
             if (read_dentry_by_name(filename, &syscall_dentry) == -1) return -1;
 
             int type = syscall_dentry.filetype;
-            printf("Opening file of type %d...\n", type);
+            // printf("Opening file of type %d...\n", type);
             switch (type) {
                 case FILE_TYPE_RTC:
                     f->fops = &rtc_fops;
@@ -374,7 +376,7 @@ int32_t close(int32_t fd) {
  *   RETURN VALUE: 0 on success, -1 on failure
  *   SIDE EFFECTS: none */
 int32_t getargs(uint8_t* buf, int32_t nbytes) {
-    printf("syscall %s\n", __FUNCTION__);
+    // printf("syscall %s\n", __FUNCTION__);
     if (buf == NULL) return -1;
 
     curr_pcb = get_pcb(curr_pid);
@@ -394,7 +396,7 @@ int32_t getargs(uint8_t* buf, int32_t nbytes) {
     *   RETURN VALUE: 0 on success, -1 on failure
     *   SIDE EFFECTS: none */
 int32_t vidmap(uint8_t** screen_start) {
-    printf("syscall %s\n", __FUNCTION__);
+    // printf("syscall %s\n", __FUNCTION__);
     // 8040000
     // Check if screen_start is an userspace address
     if (screen_start == NULL) return -1;
@@ -403,7 +405,12 @@ int32_t vidmap(uint8_t** screen_start) {
 
     map_video_mem();
     // write virtual video memory addr to screen_start
-    *screen_start = (uint8_t*) PROGRAM_VIDEO_VIRUTAL_ADDR;
+    *screen_start = (uint8_t*) PROGRAM_VIDEO_VIRTUAL_ADDR;
+    // int32_t i;
+    // for (i = 0; i < 80 * 25; i++) {
+    //     *(uint8_t *)(PROGRAM_VIDEO_VIRTUAL_ADDR + (i << 1)) = ' ';
+    //     *(uint8_t *)(PROGRAM_VIDEO_VIRTUAL_ADDR + (i << 1) + 1) = 0x7;
+    // }
     return 0;
 }
 

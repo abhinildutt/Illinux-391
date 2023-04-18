@@ -124,7 +124,7 @@ int32_t read_data (uint32_t inode, uint32_t offset, uint8_t* buf, uint32_t lengt
         bytes_read++;
         data_block_offset++;
     }
-
+    // printf("read: %d\n", bytes_read);
     return bytes_read;
 }
 

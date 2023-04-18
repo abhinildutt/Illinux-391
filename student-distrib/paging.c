@@ -80,7 +80,7 @@ void initialize_paging() {
     page_directory[PROGRAM_VIDEO_PD_IDX].cache_disable = 1;
     page_directory[PROGRAM_VIDEO_PD_IDX].accessed = 0;
     page_directory[PROGRAM_VIDEO_PD_IDX].reserved = 0;
-    page_directory[PROGRAM_VIDEO_PD_IDX].page_size = 1;
+    page_directory[PROGRAM_VIDEO_PD_IDX].page_size = 0;
     page_directory[PROGRAM_VIDEO_PD_IDX].global_page = 0;
     page_directory[PROGRAM_VIDEO_PD_IDX].available = 0;
     page_directory[PROGRAM_VIDEO_PD_IDX].page_table_addr = ((uint32_t) vidmap_page_table) / PAGE_SIZE_4KB;
@@ -89,7 +89,7 @@ void initialize_paging() {
     for (i = 0; i < TABLE_SIZE; i++) {
         vidmap_page_table[i].present = 0;
         vidmap_page_table[i].read_write = 1;
-        vidmap_page_table[i].user_supervisor = 0;
+        vidmap_page_table[i].user_supervisor = 1;
         vidmap_page_table[i].write_through = 0;
         vidmap_page_table[i].cache_disable = 1;
         vidmap_page_table[i].accessed = 0;

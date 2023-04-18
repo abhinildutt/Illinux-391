@@ -1033,7 +1033,8 @@ int syscalls_std_read_write_test() {
     int ret;
 
     printf("-------------------SYSCALL STD READ-WRITE TEST----------------------\n");
-    curr_pcb = get_pcb(get_new_pid());
+    curr_pid = get_new_pid();
+    curr_pcb = get_pcb(curr_pid);
     fs_interface_init(curr_pcb->fd_array);
     int read_arg = 3;
     int write_arg = 4;
@@ -1114,7 +1115,8 @@ int syscalls_open_test() {
     int ret;
     printf("-------------------SYSCALL OPEN TEST----------------------\n");
     int open_arg = 5;
-    curr_pcb = get_pcb(get_new_pid());
+    curr_pid = get_new_pid();
+    curr_pcb = get_pcb(curr_pid);
     fs_interface_init(curr_pcb->fd_array);
     const uint8_t* filename = (uint8_t*)"frame0.txt";
     asm volatile
@@ -1138,29 +1140,61 @@ int syscalls_open_test() {
 }
 
 /* Checkpoint 4 tests */
-/* Syscall Test - Open
+/* Syscall Test - Vidmap
     * 
-    * Asserts that we can open a file and that the fd_array is updated
+    * Asserts that we can map the video memory to a virtual address
     * Inputs: None
     * Outputs: PASS/FAIL
+    * Side Effects: None
     * Coverage: Syscall
     * Files: syscall.c/h */
 int syscalls_vidmap_test() {
     TEST_HEADER;
     int ret = 0;
     printf("-------------------SYSCALL VIDMAP TEST----------------------\n");
-    curr_pcb = get_pcb(get_new_pid());
+    curr_pid = get_new_pid();
+    curr_pcb = get_pcb(curr_pid);
     fs_interface_init(curr_pcb->fd_array);
 
-    uint8_t* buffer;
+    uint8_t* buffer = 0x0;
     uint8_t** buffer_ptr = &buffer;
-    SYSCALL(ret, 8, buffer_ptr, NULL, NULL);
-    printf("returned: %d | addr = 0x%#x\n", ret, *buffer_ptr);
+    int vidmap_arg = 8;
+    SYSCALL(ret, vidmap_arg, buffer_ptr, NULL, NULL);
+    printf("returned: %d | addr = 0x%#x\n", ret, buffer);
 
-    video_mem = (char*) PROGRAM_VIDEO_VIRTUAL_ADDR;
-    clear();
-    printf("vidmap test\n");
-    // test doesn't work rn
+    // video_mem = (char*) buffer;
+    // printf("hello, world with virtual addr\n");
+
+    // video_mem = (char*) VIDEO_MEM;
+    // printf("hello, world with physical addr\n");
+
+    return ret != -1;
+}
+
+/* Syscall Test - Invalid
+    * 
+    * Asserts that passing invalid values to the syscall handler returns -1
+    * Inputs: None
+    * Outputs: PASS/FAIL
+    * Coverage: Syscall
+    * Files: syscall.c/h */
+int syscalls_invalid_test() {
+    TEST_HEADER;
+    int ret = 0;
+    printf("-------------------SYSCALL RANDOM TEST----------------------\n");
+    curr_pid = get_new_pid();
+    curr_pcb = get_pcb(curr_pid);
+    fs_interface_init(curr_pcb->fd_array);
+
+    int random_arg = 23402384;
+
+    SYSCALL(ret, random_arg, NULL, NULL, NULL);
+    if (ret != -1) return FAIL;
+    SYSCALL(ret, 0, NULL, NULL, NULL);
+    if (ret != -1) return FAIL;
+    SYSCALL(ret, -random_arg, NULL, NULL, NULL);
+    if (ret != -1) return FAIL;
+
     return PASS;
 }
 
@@ -1206,4 +1240,5 @@ void launch_tests() {
 
     // Checkpoint 4 tests
     TEST_OUTPUT("test_syscall_vidmap", syscalls_vidmap_test());
+    // TEST_OUTPUT("test_syscalls_invalid", syscalls_invalid_test());
 }

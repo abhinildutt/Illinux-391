@@ -145,9 +145,6 @@ void map_program(int32_t pid) {
 */
 void unmap_program(int32_t pid) {
     page_directory[PROGRAM_IMAGE_PD_IDX].present = 0;
-    page_directory[PROGRAM_IMAGE_PD_IDX].user_supervisor = 0;
-    page_directory[PROGRAM_IMAGE_PD_IDX].cache_disable = 1;
-    page_directory[PROGRAM_IMAGE_PD_IDX].page_table_addr = 0;
     flush_tlb();
 }
 

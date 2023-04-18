@@ -361,9 +361,7 @@ int32_t close(int32_t fd) {
     // printf("syscall %s\n", __FUNCTION__);
     if (fd >= MAX_FILE_COUNT || fd < 0) return -1;
     curr_pcb = get_pcb(curr_pid);
-    if (curr_pcb == NULL) {
-        return -1;
-    }
+    if (curr_pcb == NULL) return -1;
     return fs_interface_close(&curr_pcb->fd_array[fd]);
 }
 
@@ -406,11 +404,6 @@ int32_t vidmap(uint8_t** screen_start) {
     map_video_mem();
     // write virtual video memory addr to screen_start
     *screen_start = (uint8_t*) PROGRAM_VIDEO_VIRTUAL_ADDR;
-    // int32_t i;
-    // for (i = 0; i < 80 * 25; i++) {
-    //     *(uint8_t *)(PROGRAM_VIDEO_VIRTUAL_ADDR + (i << 1)) = ' ';
-    //     *(uint8_t *)(PROGRAM_VIDEO_VIRTUAL_ADDR + (i << 1) + 1) = 0x7;
-    // }
     return 0;
 }
 

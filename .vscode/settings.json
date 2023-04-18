@@ -6,6 +6,7 @@
         "multiboot.h": "c",
         "keyboard_scancodes.h": "c",
         "keyboard.h": "c",
-        "compare": "c"
+        "compare": "c",
+        "terminal.h": "c"
     }
 }

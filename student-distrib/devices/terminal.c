@@ -16,10 +16,22 @@ funcptrs stdout_fops = {
     .write = term_write
 };
 
+/* Terminal Write Bad Call
+    * Inputs: f - the file descriptor
+    *         buf - the buffer to write from
+    *         nbytes - the number of bytes to write
+    * Return Value: -1
+    * Function: Returns -1, since can't write to stdin */
 int32_t stdin_write_bad_call(fd_array_member_t *f, const void *buf, int32_t nbytes) {
     return -1;
 }
 
+/* Terminal Read Bad Call
+    * Inputs: f - the file descriptor
+    *         buf - the buffer to read into
+    *         nbytes - the number of bytes to read
+    * Return Value: -1
+    * Function: Returns -1, since can't read from stdout */
 int32_t stdout_read_bad_call(fd_array_member_t *f, void *buf, int32_t nbytes) {
     return -1;
 }

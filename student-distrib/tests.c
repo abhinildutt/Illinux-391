@@ -1156,17 +1156,28 @@ int syscalls_vidmap_test() {
     curr_pcb = get_pcb(curr_pid);
     fs_interface_init(curr_pcb->fd_array);
 
+    int vidmap_arg = 8;
+    SYSCALL(ret, vidmap_arg, 0x0, NULL, NULL);
+    if (ret != -1) return FAIL;
+    SYSCALL(ret, vidmap_arg, 0x400000, NULL, NULL);
+    if (ret != -1) return FAIL;
+
     uint8_t* buffer = 0x0;
     uint8_t** buffer_ptr = &buffer;
-    int vidmap_arg = 8;
+    
     SYSCALL(ret, vidmap_arg, buffer_ptr, NULL, NULL);
     printf("returned: %d | addr = 0x%#x\n", ret, buffer);
 
-    // video_mem = (char*) buffer;
-    // printf("hello, world with virtual addr\n");
+    if (ret == -1) {
+        printf("Failed to map video memory\n");
+        return FAIL;
+    }
 
-    // video_mem = (char*) VIDEO_MEM;
-    // printf("hello, world with physical addr\n");
+    video_mem = (char*) buffer;
+    printf("hello, world with virtual addr\n");
+
+    video_mem = (char*) VIDEO_MEM;
+    printf("hello, world with physical addr\n");
 
     return ret != -1;
 }

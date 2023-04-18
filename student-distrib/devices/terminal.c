@@ -96,8 +96,12 @@ int32_t term_read(fd_array_member_t* f, void* buf, int32_t nbytes) {
 int32_t term_write(fd_array_member_t* f, const void* buf, int32_t nbytes) {
     if (buf == NULL) return -1;
     int i;
+    char c;
     for (i = 0; i < nbytes; i++) {
-        putc(((char *) buf)[i]);
+        if ((c = ((char *) buf)[i]) == '\0') {
+            return i;
+        }
+        putc(c);
     }
     return nbytes;
 }

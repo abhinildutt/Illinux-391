@@ -268,7 +268,6 @@ int32_t execute(const uint8_t* command) {
  *   SIDE EFFECTS: none
  */
 int32_t read(int32_t fd, void* buf, int32_t nbytes) {
-    // printf("syscall %s %d %d\n", __FUNCTION__, fd, nbytes);
     if (fd >= MAX_FILE_COUNT || fd < 0) return -1;
     if (buf == NULL) return -1;
     if (nbytes < 0) return -1;
@@ -287,8 +286,6 @@ int32_t read(int32_t fd, void* buf, int32_t nbytes) {
  *   SIDE EFFECTS: none
  */
 int32_t write(int32_t fd, const void* buf, int32_t nbytes) {
-    // printf("syscall %s\n", __FUNCTION__);
-
     if (fd >= MAX_FILE_COUNT || fd < 0) return -1;
     if (buf == NULL) return -1;
     if (nbytes < 0) return -1;
@@ -372,10 +369,11 @@ int32_t getargs(uint8_t* buf, int32_t nbytes) {
     printf("syscall %s\n", __FUNCTION__);
     if (buf == NULL) return -1;
 
-    uint8_t* file_arg = curr_pcb->file_arg; 
+    curr_pcb = get_pcb(curr_pid);
+    uint8_t* file_arg = curr_pcb->file_arg;
     if (file_arg == NULL || file_arg[0] == '\0') return -1;
 
-    printf("file_arg: %s, len: %d\n", file_arg, strlen((int8_t*) file_arg));
+    // printf("file_arg: %s, len: %d\n", file_arg, strlen((int8_t*) file_arg));
     strcpy((int8_t*) buf, (int8_t*) file_arg);
     return 0;
 }

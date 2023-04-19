@@ -194,19 +194,23 @@ void putc(uint8_t c) {
             break;
         case '\b':
             if (kbuffer_size == 0) break;
-            if (screen_x == 0) {
-                screen_x = NUM_COLS - 1;
-                if (screen_y > 0) {
-                    screen_y--;
+            int repeat = kbuffer[kbuffer_size - 1] == '\t' ? 4 : 1;
+            int i;
+            for (i = 0; i < repeat; i++) {
+                if (screen_x == 0) {
+                    screen_x = NUM_COLS - 1;
+                    if (screen_y > 0) {
+                        screen_y--;
+                    } else {
+                        screen_x = 0;
+                        screen_y = 0;
+                    }
                 } else {
-                    screen_x = 0;
-                    screen_y = 0;
+                    screen_x--;
                 }
-            } else {
-                screen_x--;
+                *(uint8_t *)(video_mem + ((NUM_COLS * screen_y + screen_x) << 1)) = ' ';
+                *(uint8_t *)(video_mem + ((NUM_COLS * screen_y + screen_x) << 1) + 1) = ATTRIB;
             }
-            *(uint8_t *)(video_mem + ((NUM_COLS * screen_y + screen_x) << 1)) = ' ';
-            *(uint8_t *)(video_mem + ((NUM_COLS * screen_y + screen_x) << 1) + 1) = ATTRIB;
             break;
         case '\t':
             {

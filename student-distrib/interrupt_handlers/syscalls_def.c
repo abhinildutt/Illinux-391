@@ -9,14 +9,14 @@
 #include "../paging.h"
 
 /* 
- * halt
- *   DESCRIPTION: Halt the system and return the status to the parent process.
- *   INPUTS: status -- exit status
+ * _halt
+ *   DESCRIPTION: Internal halt that takes in a 32-bit status code.
+ *   INPUTS: status -- unsigned 32-bit exit status
  *   OUTPUTS: none
  *   RETURN VALUE: 0 if successful, -1 if not successful
- *   SIDE EFFECTS: none
+ *   SIDE EFFECTS: terminates the currently running task
  */
-int32_t halt(uint8_t status) {
+int32_t _halt(uint32_t status) {
     if (curr_pid == -1) return -1;
     curr_pcb = get_pcb(curr_pid);
     if (curr_pcb == NULL) return -1;
@@ -61,6 +61,18 @@ int32_t halt(uint8_t status) {
         execute((const uint8_t*) "shell");
     }
     return 0;
+}
+
+/* 
+ * halt
+ *   DESCRIPTION: Halt the system and return the status to the parent process.
+ *   INPUTS: status -- exit status
+ *   OUTPUTS: none
+ *   RETURN VALUE: 0 if successful, -1 if not successful
+ *   SIDE EFFECTS: terminates the currently running task
+ */
+int32_t halt(uint8_t status) {
+    return _halt((uint32_t) status);
 }
 
 /* 

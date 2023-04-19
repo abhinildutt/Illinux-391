@@ -62,7 +62,7 @@ void exception_handler(int int_vector) {
     
     // infinite loop here, no interrupts can occur
     // asm volatile (".1 : hlt; jmp .1;");
-    halt(PROGRAM_EXCEPTION_FAIL_NUM);
+    _halt(PROGRAM_EXCEPTION_FAIL_NUM);
 
     sti();
 } 

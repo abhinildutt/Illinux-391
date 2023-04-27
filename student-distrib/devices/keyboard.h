@@ -21,6 +21,7 @@ uint8_t left_control_pressed;
 uint8_t right_control_pressed;
 uint8_t left_shift_pressed;
 uint8_t right_shift_pressed;
+uint8_t alt_pressed;
 uint8_t done_typing;
 
 extern void keyboard_init();

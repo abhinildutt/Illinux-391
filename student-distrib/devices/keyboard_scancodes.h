@@ -11,6 +11,7 @@
 #define CODE_RIGHT_SHIFT 0x36
 #define CODE_CAPS_LOCK 0x3A
 #define CODE_EXTENDED 0xE0
+#define CODE_ALT 0X38
 
 // https://wiki.osdev.org/PS/2_Keyboard#Scan_Code_Set_1
 // Index 0 is lowercase, index 1 is capital

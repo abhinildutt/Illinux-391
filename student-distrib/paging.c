@@ -98,7 +98,7 @@ void initialize_paging() {
         vidmap_page_table[i].global_page = 0;
         vidmap_page_table[i].available = 0;
         vidmap_page_table[i].page_addr = i;
-        if (i * PAGE_SIZE_4KB == VIDEO_MEM) {
+        if (i * PAGE_SIZE_4KB >= VIDEO_MEM && i * PAGE_SIZE_4KB <= VIDEO_MEM + 3) {
             vidmap_page_table[i].present = 1;
             vidmap_page_table[i].cache_disable = 0;
         }

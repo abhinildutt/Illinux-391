@@ -20,6 +20,7 @@ void keyboard_init() {
     right_control_pressed = 0;
     left_shift_pressed = 0;
     right_shift_pressed = 0;
+    alt_pressed = 0;
     done_typing = 0;
 }
 
@@ -66,10 +67,30 @@ void keyboard_handler() {
             case CODE_CAPS_LOCK:
                 caps_lock_toggle = 0;
                 break;
+            case CODE_ALT:
+                alt_pressed = 0;
+                break;
             default:
                 break;
         }
     } else { // pressed
+        if(alt_pressed) {
+            switch (scancode)
+            {
+            case 0x3B: // F1
+                switch_terminal(0);
+                break;
+            case 0x3C: // F2
+                switch_terminal(1);
+                break;
+            case 0x3D: // F3
+                switch_terminal(2);
+                break;
+            default:
+                break;
+            }
+        }
+
         switch (scancode) {
             case CODE_BACKSPACE:
                 if (kbuffer_size > 0) {
@@ -98,6 +119,9 @@ void keyboard_handler() {
                 break;
             case CODE_RIGHT_SHIFT:
                 right_shift_pressed = 1;
+                break;
+            case CODE_ALT :
+                alt_pressed = 1;
                 break;
             case CODE_CAPS_LOCK:
                 if (!caps_lock_toggle) {

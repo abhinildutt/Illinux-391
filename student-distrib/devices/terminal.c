@@ -51,6 +51,15 @@ void term_reset() {
     * Return Value: none
     * Function: Initializes the terminal */
 void term_init() {
+
+    int i;
+    for(i = 0; i < MAX_TERMINAL_ID; i++) {
+        terminals[i].cursor_x = 0;
+        terminals[i].cursor_y = 0;
+        terminals[i].term_buffer_size = 0;
+        terminals[i].vidmem = 0xB8000 + i * PAGE_SIZE_4KB;
+    }
+
     cursor_init();
     term_reset();
     return;
@@ -141,4 +150,15 @@ void cursor_set(uint32_t x, uint32_t y) {
     outb(pos >> 8, VGA_DATA_PORT); // high 8 bits
     outb(CURSOR_LOCATION_LOW, VGA_INDEX_PORT);
     outb(pos, VGA_DATA_PORT);
+}
+
+void switch_terminal(int terminal_id) {
+    if(curr_terminal_id == terminal_id) return;
+    if(terminal_id > 2 || terminal_id < 0) return;
+
+    memcpy((void*)terminals[curr_terminal_id].vidmem, (const void*)0xB8000, PAGE_SIZE_4KB);
+    memcpy((void*)0xB8000, (const void*)terminals[terminal_id].vidmem, PAGE_SIZE_4KB);
+
+    curr_terminal_id = terminal_id;
+    cursor_set(terminals[curr_terminal_id].cursor_x, terminals[curr_terminal_id].cursor_y);
 }

@@ -160,7 +160,7 @@ void cursor_set(uint32_t x, uint32_t y) {
 
 void switch_terminal(uint8_t terminal_id) {
     if (curr_terminal_id == terminal_id) return;
-    if (terminal_id > MAX_TERMINAL_ID) return;
+    if (terminal_id >= MAX_TERMINAL_ID) return;
 
     memcpy((void*) terminals[curr_terminal_id].vidmem, (const void*) VIDEO_MEM, PAGE_SIZE_4KB);
     memcpy((void*) VIDEO_MEM, (const void*) terminals[terminal_id].vidmem, PAGE_SIZE_4KB);

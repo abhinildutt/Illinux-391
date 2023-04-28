@@ -175,7 +175,16 @@ void entry(unsigned long magic, unsigned long addr) {
     launch_tests();
 #else
     /* Execute the first program ("shell") ... */
+    switch_terminal(0);
     execute((const uint8_t*) "shell");
+
+    switch_terminal(1);
+    execute((const uint8_t*) "shell");
+
+    switch_terminal(2);
+    execute((const uint8_t*) "shell");
+
+    switch_terminal(0);
 #endif
 
     /* Spin (nicely, so we don't chew up cycles) */

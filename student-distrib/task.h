@@ -5,7 +5,7 @@
 #include "filesystem/filesys_interface.h"
 
 #define MAX_FILE_COUNT 8
-#define MAX_PID_COUNT 3
+#define MAX_PID_COUNT 6
 #define FILE_NAME_LEN 32
 
 typedef struct pcb {

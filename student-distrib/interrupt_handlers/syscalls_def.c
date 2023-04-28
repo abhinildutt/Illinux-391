@@ -179,6 +179,9 @@ int32_t execute(const uint8_t* command) {
         return -1;
     }
 
+    // Assign new PID to the current terminal
+    terminals[curr_terminal_id].active_pid = new_pid;
+
     uint8_t entry_buf[4];
     // Getting the eip
     // Per docs, The EIP you need to jump to is the entry point from bytes 24-27 of the executable

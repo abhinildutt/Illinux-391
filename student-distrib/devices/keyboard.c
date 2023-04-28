@@ -12,7 +12,7 @@
  */
 void keyboard_init() {
     enable_irq(KEYBOARD_IRQ_NUM);
-    kbuffer_size = 0;
+    terminals[curr_terminal_id].keyboard_buffer_size = 0;
     is_extended = 0;
     caps_lock_toggle = 0;
     caps_lock_active = 0;
@@ -93,20 +93,20 @@ void keyboard_handler() {
 
         switch (scancode) {
             case CODE_BACKSPACE:
-                if (kbuffer_size > 0) {
+                if (terminals[curr_terminal_id].keyboard_buffer_size > 0) {
                     putc('\b');
-                    kbuffer_size--;
+                    terminals[curr_terminal_id].keyboard_buffer_size--;
                 }
                 break;
             case CODE_TAB:
-                if (kbuffer_size < KBUFFER_SIZE) {
-                    kbuffer[kbuffer_size++] = '\t';
+                if (terminals[curr_terminal_id].keyboard_buffer_size < terminals[curr_terminal_id].keyboard_buffer_size) {
+                    terminals[curr_terminal_id].keyboard_buffer[terminals[curr_terminal_id].keyboard_buffer_size++] = '\t';
                     putc('\t');
                 }
                 break;
             case CODE_ENTER:
-                if (kbuffer_size < KBUFFER_SIZE) {
-                    kbuffer[kbuffer_size++] = '\n';
+                if (terminals[curr_terminal_id].keyboard_buffer_size < terminals[curr_terminal_id].keyboard_buffer_size) {
+                    terminals[curr_terminal_id].keyboard_buffer[terminals[curr_terminal_id].keyboard_buffer_size++] = '\n';
                     putc('\n');
                     done_typing = 1;
                 }
@@ -132,7 +132,7 @@ void keyboard_handler() {
             default:
                 if (scancode == CODE_L && (left_control_pressed || right_control_pressed)) {
                     term_reset();
-                } else if (kbuffer_size < KBUFFER_SIZE) {
+                } else if (terminals[curr_terminal_id].keyboard_buffer_size < terminals[curr_terminal_id].keyboard_buffer_size) {
                     char c;
                     if (left_shift_pressed || right_shift_pressed) {
                         c = scancodeToKey[scancode][1];
@@ -141,7 +141,7 @@ void keyboard_handler() {
                     } else {
                         c = scancodeToKey[scancode][0];
                     }
-                    kbuffer[kbuffer_size++] = c;
+                    terminals[curr_terminal_id].keyboard_buffer[terminals[curr_terminal_id].keyboard_buffer_size++] = c;
                     putc(c);
                 }
                 break;
@@ -151,7 +151,6 @@ void keyboard_handler() {
     sti();
 }
 
-
 void clear_kbuffer() {
-    kbuffer_size = 0;
+    terminals[curr_terminal_id].keyboard_buffer_size = 0;
 }   

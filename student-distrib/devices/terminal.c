@@ -1,6 +1,7 @@
 #include "terminal.h"
 #include "keyboard.h"
 #include "../lib.h"
+#include "../address.h"
 
 funcptrs stdin_fops = {
     .open = term_open,
@@ -15,6 +16,9 @@ funcptrs stdout_fops = {
     .read = stdout_read_bad_call,
     .write = term_write
 };
+
+uint8_t curr_terminal_id = 0;
+terminal_data_t terminals[MAX_TERMINAL_ID];
 
 /* Terminal Write Bad Call
     * Inputs: f - the file descriptor
@@ -41,8 +45,9 @@ int32_t stdout_read_bad_call(fd_array_member_t *f, void *buf, int32_t nbytes) {
     * Return Value: none
     * Function: Clears the screen and resets the cursor to the top left corner */
 void term_reset() {
-    screen_x = screen_y = 0;
     clear();
+    terminals[curr_terminal_id].cursor_x = 0;
+    terminals[curr_terminal_id].cursor_y = 0;
     cursor_set(0, 0);
 }
 
@@ -51,15 +56,16 @@ void term_reset() {
     * Return Value: none
     * Function: Initializes the terminal */
 void term_init() {
-
     int i;
-    for(i = 0; i < MAX_TERMINAL_ID; i++) {
-        terminals[i].cursor_x = 0;
+    for (i = 0; i < MAX_TERMINAL_ID; i++) {
+        terminals[i].screen_x = 0;
+        terminals[i].screen_y = 0;
         terminals[i].cursor_y = 0;
-        terminals[i].term_buffer_size = 0;
-        terminals[i].vidmem = 0xB8000 + i * PAGE_SIZE_4KB;
+        terminals[i].cursor_y = 0;
+        terminals[i].keyboard_buffer_size = 0;
+        terminals[i].vidmem = VIDEO_MEM + i * PAGE_SIZE_4KB;
+        terminals[i].active_pid = -1;
     }
-
     cursor_init();
     term_reset();
     return;
@@ -70,7 +76,7 @@ void term_init() {
     * Return Value: 0
     * Function: Opens the terminal */
 int32_t term_open(fd_array_member_t* f, const uint8_t* filename) {
-    kbuffer_size = 0;
+    terminals[curr_terminal_id].keyboard_buffer_size = 0;
     return 0;
 }
 
@@ -97,9 +103,9 @@ int32_t term_read(fd_array_member_t* f, void* buf, int32_t nbytes) {
     cli();
 
     int i;
-    for (i = 0; i < kbuffer_size; i++) {
-        ((char *) buf)[i] = kbuffer[i];
-        if (kbuffer[i] == '\n') {
+    for (i = 0; i < terminals[curr_terminal_id].keyboard_buffer_size; i++) {
+        ((char *) buf)[i] = terminals[curr_terminal_id].keyboard_buffer[i];
+        if (terminals[curr_terminal_id].keyboard_buffer[i] == '\n') {
             break;
         }
     }
@@ -152,12 +158,12 @@ void cursor_set(uint32_t x, uint32_t y) {
     outb(pos, VGA_DATA_PORT);
 }
 
-void switch_terminal(int terminal_id) {
-    if(curr_terminal_id == terminal_id) return;
-    if(terminal_id > 2 || terminal_id < 0) return;
+void switch_terminal(uint8_t terminal_id) {
+    if (curr_terminal_id == terminal_id) return;
+    if (terminal_id > MAX_TERMINAL_ID) return;
 
-    memcpy((void*)terminals[curr_terminal_id].vidmem, (const void*)0xB8000, PAGE_SIZE_4KB);
-    memcpy((void*)0xB8000, (const void*)terminals[terminal_id].vidmem, PAGE_SIZE_4KB);
+    memcpy((void*) terminals[curr_terminal_id].vidmem, (const void*) VIDEO_MEM, PAGE_SIZE_4KB);
+    memcpy((void*) VIDEO_MEM, (const void*) terminals[terminal_id].vidmem, PAGE_SIZE_4KB);
 
     curr_terminal_id = terminal_id;
     cursor_set(terminals[curr_terminal_id].cursor_x, terminals[curr_terminal_id].cursor_y);

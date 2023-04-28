@@ -97,9 +97,10 @@ void initialize_paging() {
         vidmap_page_table[i].pt_attribute_index = 0;
         vidmap_page_table[i].global_page = 0;
         vidmap_page_table[i].available = 0;
-        vidmap_page_table[i].page_addr = i;
-        if (i * PAGE_SIZE_4KB >= VIDEO_MEM && i * PAGE_SIZE_4KB <= VIDEO_MEM + 3) {
-            vidmap_page_table[i].present = 1;
+        vidmap_page_table[i].page_addr = 0;
+        if (i == VIDEO_MEM_INDEX) {
+            vidmap_page_table[i].page_addr = VIDEO_MEM_INDEX;
+            vidmap_page_table[i].present = 0;
             vidmap_page_table[i].cache_disable = 0;
         }
     }

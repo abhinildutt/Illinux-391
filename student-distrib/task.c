@@ -1,5 +1,5 @@
 #include "task.h"
-#include "paging.h"
+#include "address.h"
 
 int32_t curr_pid = -1;
 pcb_t* curr_pcb = NULL;

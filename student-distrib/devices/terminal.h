@@ -4,7 +4,7 @@
 #include "../lib.h"
 #include "../types.h"
 #include "../filesystem/filesys_interface.h"
-#include "../paging.h"
+#include "../devices/keyboard.h"
 
 #define SCREEN_WIDTH (320 / 4)
 #define SCREEN_HEIGHT (200 / 4)
@@ -18,20 +18,22 @@
 #define CURSOR_LOCATION_LOW 0x0F
 #define MAX_TERMINAL_ID 3
 
-uint32_t screen_x, screen_y;
-uint32_t curr_terminal_id = 0;
+typedef struct terminal_data {
+    char keyboard_buffer[KBUFFER_SIZE];
+    uint32_t keyboard_buffer_size;
 
-struct terminal_data_t {
-    char term_buffer[128];
-    int  term_buffer_size;
+    uint32_t screen_x;
+    uint32_t screen_y;
+    uint32_t cursor_x;
+    uint32_t cursor_y;
 
-    int cursor_x;
-    int cursor_y;
+    uint32_t vidmem;
 
-    int vidmem;
-};
+    int32_t active_pid;
+} terminal_data_t;
 
-terminal_data_t terminals[MAX_TERMINAL_ID];
+extern uint8_t curr_terminal_id;
+extern terminal_data_t terminals[MAX_TERMINAL_ID];
 
 extern funcptrs stdin_fops;
 extern funcptrs stdout_fops;
@@ -49,6 +51,6 @@ extern void cursor_init();
 extern void cursor_set(uint32_t x, uint32_t y);
 
 int get_current_terminal_id();
-void switch_terminal(int terminal_id);
+void switch_terminal(uint8_t terminal_id);
 
 #endif

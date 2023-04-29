@@ -4,6 +4,7 @@
 #include "../address.h"
 #include "../task.h"
 #include "../paging.h"
+#include "../interrupt_handlers/syscalls_def.h"
 
 funcptrs stdin_fops = {
     .open = term_open,
@@ -172,22 +173,19 @@ void cursor_set(uint32_t x, uint32_t y) {
 void switch_terminal(uint8_t terminal_id) {
     if (curr_terminal_id == terminal_id) return;
     if (terminal_id >= MAX_TERMINAL_ID) return;
-
-    // printf("starting...\n");
-
+    
+    // Copy current video memory to the terminal background video memory
     memcpy((void*) (VIDEO_MEM_BACKGROUND_START_ADDR + curr_terminal_id * PAGE_SIZE_4KB), 
         (const void*) VIDEO_MEM, PAGE_SIZE_4KB);
-
-    // printf("copied...\n");
-
+    // Copy target terminal background video memory to video memory
     memcpy((void*) VIDEO_MEM, (const void*) (VIDEO_MEM_BACKGROUND_START_ADDR + terminal_id * PAGE_SIZE_4KB), PAGE_SIZE_4KB);
-    // printf("restored...\n");
         
-    curr_terminal_id = terminal_id;
-    // int32_t active_pid = terminals[curr_terminal_id].active_pid;
-    // map_program(active_pid, get_pcb(active_pid)->is_vidmapped, curr_terminal_id, 1);
-
-    // printf("mapped...\n");
-    
+    curr_terminal_id = terminal_id;    
     cursor_set(terminals[curr_terminal_id].cursor_x, terminals[curr_terminal_id].cursor_y);
+
+    // int32_t active_pid = terminals[curr_terminal_id].active_pid;
+    // if (active_pid == -1) {
+    //     sti();
+    //     execute((const uint8_t*) "ls");
+    // }
 }

@@ -1,5 +1,6 @@
 #include "paging.h"
 #include "address.h"
+#include "lib.h"
 
 extern void loadPageDirectory(int);
 extern void enablePaging();

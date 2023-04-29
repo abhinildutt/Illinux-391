@@ -14,7 +14,7 @@ lib.o: lib.c lib.h types.h devices/keyboard.h devices/../lib.h \
   devices/../i8259.h devices/../types.h devices/terminal.h \
   devices/../types.h devices/../filesystem/filesys_interface.h \
   devices/../filesystem/../types.h devices/../devices/keyboard.h
-paging.o: paging.c paging.h types.h address.h
+paging.o: paging.c paging.h types.h address.h lib.h
 task.o: task.c task.h types.h filesystem/filesys_interface.h \
   filesystem/../types.h address.h
 tests.o: tests.c tests.h task.h types.h filesystem/filesys_interface.h \
@@ -44,7 +44,9 @@ terminal.o: devices/terminal.c devices/terminal.h devices/../lib.h \
   devices/../devices/../lib.h devices/../devices/../i8259.h \
   devices/../devices/../types.h devices/keyboard.h devices/../address.h \
   devices/../task.h devices/../filesystem/filesys_interface.h \
-  devices/../paging.h devices/../address.h
+  devices/../paging.h devices/../address.h \
+  devices/../interrupt_handlers/syscalls_def.h \
+  devices/../interrupt_handlers/../types.h
 filesys.o: filesystem/filesys.c filesystem/filesys.h \
   filesystem/../types.h filesystem/../lib.h filesystem/../types.h \
   filesystem/filesys_interface.h \

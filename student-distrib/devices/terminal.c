@@ -159,9 +159,6 @@ void cursor_init() {
     * Return Value: none
     * Function: Sets the cursor to the given coordinates */
 void cursor_set(uint32_t x, uint32_t y) {
-    if (curr_executing_terminal_id != curr_displaying_terminal_id) {
-        return;
-    }
     uint32_t pos = y * SCREEN_WIDTH + x;
     outb(CURSOR_LOCATION_HIGH, VGA_INDEX_PORT);
     outb(pos >> 8, VGA_DATA_PORT); // high 8 bits
@@ -175,17 +172,13 @@ void term_video_switch(uint8_t terminal_id) {
     
     // Copy current video memory to the terminal background video memory
     memcpy((void*) (VIDEO_MEM_BACKGROUND_START_ADDR + curr_displaying_terminal_id * PAGE_SIZE_4KB), 
-        (const void*) VIDEO_MEM, PAGE_SIZE_4KB);
+        (const void*) VIDEO_PERM_MEM_ADDR, PAGE_SIZE_4KB);
     curr_displaying_terminal_id = terminal_id;
     // Copy target terminal background video memory to video memory
-    memcpy((void*) VIDEO_MEM, 
+    memcpy((void*) VIDEO_PERM_MEM_ADDR, 
         (const void*) (VIDEO_MEM_BACKGROUND_START_ADDR + curr_displaying_terminal_id * PAGE_SIZE_4KB), PAGE_SIZE_4KB);
 
-    // map_program(curr_pid, curr_pcb->is_vidmapped, curr_pcb->terminal_id, curr_pcb->terminal_id == curr_displaying_terminal_id);
-    uint8_t temp = curr_executing_terminal_id;
-    curr_executing_terminal_id = curr_displaying_terminal_id;
     cursor_set(terminals[curr_displaying_terminal_id].screen_x, terminals[curr_displaying_terminal_id].screen_y);
-    curr_executing_terminal_id = temp;
 }
 
 void term_context_switch(uint8_t terminal_id) {

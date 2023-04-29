@@ -152,7 +152,7 @@ int32_t execute(const uint8_t* command) {
         return -1;
     }
     file_arg[file_arg_length] = '\0';
-    printf("parsed cmd (filename=%s, args=%s, len=%d)\n", file_name, file_arg, file_name_length);
+    // printf("parsed cmd (filename=%s, args=%s, len=%d)\n", file_name, file_arg, file_name_length);
 
     // File header checks
     dentry_t syscall_dentry;
@@ -183,7 +183,7 @@ int32_t execute(const uint8_t* command) {
     // Get new PID
     int32_t new_pid = get_new_pid(); 
     if (new_pid == -1) {
-        printf("NO AVAILABLE PID's\n");
+        // printf("NO AVAILABLE PID's\n");
         sti();
         return -1;
     }
@@ -260,7 +260,7 @@ int32_t execute(const uint8_t* command) {
     curr_pid = new_pid;
     curr_pcb = pcb;
 
-    sti();
+    // sti();
 
     // printf("switch time\n");
     // PUSH before IRET for context switching
@@ -280,6 +280,7 @@ int32_t execute(const uint8_t* command) {
         : "a"(USER_DS), "b"(pcb->esp) , "c"(USER_CS), "d"(pcb->eip)
         : "memory"
     );
+    sti();
     return 0;
 }
 

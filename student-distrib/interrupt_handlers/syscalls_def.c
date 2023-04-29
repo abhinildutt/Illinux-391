@@ -40,6 +40,9 @@ int32_t _halt(uint32_t status) {
         curr_pid = curr_pcb->parent_pid;
         curr_pcb = get_pcb(curr_pid);
         curr_pcb->active = 1;
+
+        // update terminal's active pid
+        terminals[curr_terminal_id].active_pid = curr_pid;
         
         // Restore stack pointers & put status code in eax
         asm volatile ("       \n \

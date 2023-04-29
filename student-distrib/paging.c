@@ -41,7 +41,7 @@ void initialize_paging() {
         page_table[i].global_page = 0;
         page_table[i].available = 0;
         page_table[i].page_addr = 0;
-        if (i == VIDEO_MEM_INDEX) {
+        if (i == VIDEO_MEM_INDEX || i == VIDEO_PERM_MEM_INDEX) {
             page_table[i].present = 1;
             page_table[i].page_addr = VIDEO_MEM_INDEX;
             page_table[i].cache_disable = 0;
@@ -126,7 +126,6 @@ void initialize_paging() {
  *   SIDE EFFECTS: maps a program to a page directory entry
  */
 void map_program(int32_t pid, uint8_t is_vidmapped, uint32_t owning_terminal_id, uint8_t is_terminal_displayed) {
-    // printf("mapping %d (vidmap=%d, tid=%d, displayed=%d)\n", pid, is_vidmapped, owning_terminal_id, is_terminal_displayed);
     // Per the docs, the first user-level program (the shell) should be loaded at physical 8 MB,
     // and the second user-level program, when it is executed by the shell, should be loaded at
     // physical 12 MB
@@ -156,6 +155,7 @@ void map_program(int32_t pid, uint8_t is_vidmapped, uint32_t owning_terminal_id,
         vidmap_page_table[VIDEO_MEM_INDEX].page_addr = VIDEO_MEM_BACKGROUND_START_INDEX + owning_terminal_id;
     }
     flush_tlb();
+    // printf("mapping %d (vidmap=%d, tid=%d, displayed=%d)\n", pid, is_vidmapped, owning_terminal_id, is_terminal_displayed);
 }
 
 /* 

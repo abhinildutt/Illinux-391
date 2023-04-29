@@ -1,6 +1,8 @@
 #include "keyboard.h"
 #include "keyboard_scancodes.h"
 #include "terminal.h"
+#include "../address.h"
+#include "../lib.h"
 
 /* 
  * keyboard_init
@@ -33,11 +35,6 @@ void keyboard_init() {
 void keyboard_handler() {
     cli();
 
-    // Keyboard should only ever be active on the currently shown terminal
-    term_context_switch(curr_displaying_terminal_id);
-    terminal_data_t curr_terminal = terminals[curr_displaying_terminal_id];
-    printf("%d", curr_executing_terminal_id);
-
     uint8_t scancode = inb(KEYBOARD_DATA_PORT);
     if (scancode == CODE_EXTENDED) {
         is_extended = 1;
@@ -52,10 +49,19 @@ void keyboard_handler() {
         return;
     }
 
+    // Keyboard should only ever be active on the currently shown terminal
+    // Don't context switch, just fake it
+    uint8_t actual_executing_terminal_id = curr_executing_terminal_id;
+    curr_executing_terminal_id = curr_displaying_terminal_id;
+    video_mem = (char*) (VIDEO_PERM_MEM_ADDR);
+    terminal_data_t* curr_terminal = &terminals[curr_displaying_terminal_id];
+
     if (scancode >= RELEASED_SCANCODE_OFFSET) { // released
         scancode -= RELEASED_SCANCODE_OFFSET;
         if (scancode >= NUM_SCANCODES) {
             send_eoi(KEYBOARD_IRQ_NUM);
+            curr_executing_terminal_id = actual_executing_terminal_id;
+            video_mem = (char*) (VIDEO_MEM);
             sti();
             return;
         }
@@ -81,22 +87,22 @@ void keyboard_handler() {
     } else { // pressed
         switch (scancode) {
             case CODE_BACKSPACE:
-                if (curr_terminal.keyboard_buffer_size > 0) {
+                if (curr_terminal->keyboard_buffer_size > 0) {
                     putc('\b');
-                    terminals[curr_executing_terminal_id].keyboard_buffer_size--;
+                    curr_terminal->keyboard_buffer_size--;
                 }
                 break;
             case CODE_TAB:
-                if (curr_terminal.keyboard_buffer_size < KBUFFER_SIZE) {
-                    curr_terminal.keyboard_buffer[curr_terminal.keyboard_buffer_size++] = '\t';
+                if (curr_terminal->keyboard_buffer_size < KBUFFER_SIZE) {
+                    curr_terminal->keyboard_buffer[curr_terminal->keyboard_buffer_size++] = '\t';
                     putc('\t');
                 }
                 break;
             case CODE_ENTER:
-                if (curr_terminal.keyboard_buffer_size < KBUFFER_SIZE) {
-                    curr_terminal.keyboard_buffer[curr_terminal.keyboard_buffer_size++] = '\n';
+                if (curr_terminal->keyboard_buffer_size < KBUFFER_SIZE) {
+                    curr_terminal->keyboard_buffer[curr_terminal->keyboard_buffer_size++] = '\n';
                     putc('\n');
-                    curr_terminal.is_done_typing = 1;
+                    curr_terminal->is_done_typing = 1;
                 }
                 break;
             case CODE_LEFT_CONTROL:
@@ -119,23 +125,32 @@ void keyboard_handler() {
                 break;
             case CODE_F1:
                 if (alt_pressed) {
+                    send_eoi(KEYBOARD_IRQ_NUM);
+                    curr_executing_terminal_id = actual_executing_terminal_id;
+                    video_mem = (char*) (VIDEO_MEM);
                     term_video_switch(0);
                 }
                 break;
             case CODE_F2:
                 if (alt_pressed) {
+                    send_eoi(KEYBOARD_IRQ_NUM);
+                    curr_executing_terminal_id = actual_executing_terminal_id;
+                    video_mem = (char*) (VIDEO_MEM);
                     term_video_switch(1);
                 }
                 break;
             case CODE_F3:
                 if (alt_pressed) {
+                    send_eoi(KEYBOARD_IRQ_NUM);
+                    curr_executing_terminal_id = actual_executing_terminal_id;
+                    video_mem = (char*) (VIDEO_MEM);
                     term_video_switch(2);
                 }
                 break;
             default:
                 if (scancode == CODE_L && (left_control_pressed || right_control_pressed)) {
                     term_reset();
-                } else if (curr_terminal.keyboard_buffer_size < KBUFFER_SIZE) {
+                } else if (curr_terminal->keyboard_buffer_size < KBUFFER_SIZE) {
                     char c;
                     if (left_shift_pressed || right_shift_pressed) {
                         c = scancodeToKey[scancode][1];
@@ -144,13 +159,15 @@ void keyboard_handler() {
                     } else {
                         c = scancodeToKey[scancode][0];
                     }
-                    curr_terminal.keyboard_buffer[curr_terminal.keyboard_buffer_size++] = c;
+                    curr_terminal->keyboard_buffer[curr_terminal->keyboard_buffer_size++] = c;
                     putc(c);
                 }
                 break;
         }
     }
     send_eoi(KEYBOARD_IRQ_NUM);
+    curr_executing_terminal_id = actual_executing_terminal_id;
+    video_mem = (char*) (VIDEO_MEM);
     sti();
 }
 

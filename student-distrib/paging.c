@@ -44,6 +44,10 @@ void initialize_paging() {
             page_table[i].present = 1;
             page_table[i].page_addr = VIDEO_MEM_INDEX;
             page_table[i].cache_disable = 0;
+        } else if (i >= VIDEO_MEM_BACKGROUND_START_INDEX && i <= VIDEO_MEM_BACKGROUND_END_INDEX) {
+            page_table[i].present = 1;
+            page_table[i].page_addr = i;
+            page_table[i].cache_disable = 0;
         }
     }
 

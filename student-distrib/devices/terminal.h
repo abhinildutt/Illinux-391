@@ -21,6 +21,7 @@
 typedef struct terminal_data {
     char keyboard_buffer[KBUFFER_SIZE];
     uint32_t keyboard_buffer_size;
+    uint8_t is_done_typing;
 
     uint32_t screen_x;
     uint32_t screen_y;

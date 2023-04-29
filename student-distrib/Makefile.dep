@@ -42,7 +42,9 @@ terminal.o: devices/terminal.c devices/terminal.h devices/../lib.h \
   devices/../filesystem/filesys_interface.h \
   devices/../filesystem/../types.h devices/../devices/keyboard.h \
   devices/../devices/../lib.h devices/../devices/../i8259.h \
-  devices/../devices/../types.h devices/keyboard.h devices/../address.h
+  devices/../devices/../types.h devices/keyboard.h devices/../address.h \
+  devices/../task.h devices/../filesystem/filesys_interface.h \
+  devices/../paging.h devices/../address.h
 filesys.o: filesystem/filesys.c filesystem/filesys.h \
   filesystem/../types.h filesystem/../lib.h filesystem/../types.h \
   filesystem/filesys_interface.h \

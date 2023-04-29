@@ -2,6 +2,8 @@
 #include "keyboard.h"
 #include "../lib.h"
 #include "../address.h"
+#include "../task.h"
+#include "../paging.h"
 
 funcptrs stdin_fops = {
     .open = term_open,
@@ -63,6 +65,7 @@ void term_init() {
         terminals[i].screen_y = 0;
         terminals[i].cursor_y = 0;
         terminals[i].cursor_y = 0;
+        terminals[i].is_done_typing = 0;
         terminals[i].keyboard_buffer_size = 0;
         terminals[i].active_pid = -1;
 
@@ -103,7 +106,7 @@ int32_t term_read(fd_array_member_t* f, void* buf, int32_t nbytes) {
     if (buf == NULL) return -1;
 
     sti();
-    while (done_typing == 0) {
+    while (terminals[curr_terminal_id].is_done_typing == 0) {
         asm volatile("hlt");
     }
     cli();
@@ -116,7 +119,7 @@ int32_t term_read(fd_array_member_t* f, void* buf, int32_t nbytes) {
         }
     }
     clear_kbuffer();
-    done_typing = 0;
+    terminals[curr_terminal_id].is_done_typing = 0;
     sti();
     return i + 1;
 }
@@ -157,6 +160,8 @@ void cursor_init() {
     * Return Value: none
     * Function: Sets the cursor to the given coordinates */
 void cursor_set(uint32_t x, uint32_t y) {
+    terminals[curr_terminal_id].cursor_x = x;
+    terminals[curr_terminal_id].cursor_y = y;
     uint32_t pos = y * SCREEN_WIDTH + x;
     outb(CURSOR_LOCATION_HIGH, VGA_INDEX_PORT);
     outb(pos >> 8, VGA_DATA_PORT); // high 8 bits
@@ -168,10 +173,21 @@ void switch_terminal(uint8_t terminal_id) {
     if (curr_terminal_id == terminal_id) return;
     if (terminal_id >= MAX_TERMINAL_ID) return;
 
+    // printf("starting...\n");
+
     memcpy((void*) (VIDEO_MEM_BACKGROUND_START_ADDR + curr_terminal_id * PAGE_SIZE_4KB), 
         (const void*) VIDEO_MEM, PAGE_SIZE_4KB);
-    memcpy((void*) VIDEO_MEM, (const void*) (VIDEO_MEM_BACKGROUND_START_ADDR + terminal_id * PAGE_SIZE_4KB), PAGE_SIZE_4KB);
 
+    // printf("copied...\n");
+
+    memcpy((void*) VIDEO_MEM, (const void*) (VIDEO_MEM_BACKGROUND_START_ADDR + terminal_id * PAGE_SIZE_4KB), PAGE_SIZE_4KB);
+    // printf("restored...\n");
+        
     curr_terminal_id = terminal_id;
+    // int32_t active_pid = terminals[curr_terminal_id].active_pid;
+    // map_program(active_pid, get_pcb(active_pid)->is_vidmapped, curr_terminal_id, 1);
+
+    // printf("mapped...\n");
+    
     cursor_set(terminals[curr_terminal_id].cursor_x, terminals[curr_terminal_id].cursor_y);
 }

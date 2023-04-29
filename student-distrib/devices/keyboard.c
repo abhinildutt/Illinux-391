@@ -20,7 +20,6 @@ void keyboard_init() {
     left_shift_pressed = 0;
     right_shift_pressed = 0;
     alt_pressed = 0;
-    done_typing = 0;
 }
 
 /* 
@@ -90,7 +89,7 @@ void keyboard_handler() {
                 if (terminals[curr_terminal_id].keyboard_buffer_size < KBUFFER_SIZE) {
                     terminals[curr_terminal_id].keyboard_buffer[terminals[curr_terminal_id].keyboard_buffer_size++] = '\n';
                     putc('\n');
-                    done_typing = 1;
+                    terminals[curr_terminal_id].is_done_typing = 1;
                 }
                 break;
             case CODE_LEFT_CONTROL:

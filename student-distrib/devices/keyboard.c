@@ -24,6 +24,18 @@ void keyboard_init() {
     alt_pressed = 0;
 }
 
+// Pretend to be in the context of the displayed terminal
+#define KEYBOARD_HANDLER_PROLOGUE(original_terminal_id)        \
+    original_terminal_id = curr_executing_terminal_id;         \
+    curr_executing_terminal_id = curr_displaying_terminal_id;  \
+    video_mem = (char*) (VIDEO_PERM_MEM_ADDR);                 \
+
+// Restore the original executing terminal context
+#define KEYBOARD_HANDLER_EPILOGUE(original_terminal_id)  \
+    send_eoi(KEYBOARD_IRQ_NUM);                          \
+    curr_executing_terminal_id = original_terminal_id;   \
+    video_mem = (char*) VIDEO_MEM;
+
 /* 
  * keyboard_handler
  *   DESCRIPTION: Handle a keyboard interrupt (data available).
@@ -51,17 +63,14 @@ void keyboard_handler() {
 
     // Keyboard should only ever be active on the currently shown terminal
     // Don't context switch, just fake it
-    uint8_t actual_executing_terminal_id = curr_executing_terminal_id;
-    curr_executing_terminal_id = curr_displaying_terminal_id;
-    video_mem = (char*) (VIDEO_PERM_MEM_ADDR);
+    uint8_t original_executing_terminal_id;
+    KEYBOARD_HANDLER_PROLOGUE(original_executing_terminal_id);
     terminal_data_t* curr_terminal = &terminals[curr_displaying_terminal_id];
 
     if (scancode >= RELEASED_SCANCODE_OFFSET) { // released
         scancode -= RELEASED_SCANCODE_OFFSET;
         if (scancode >= NUM_SCANCODES) {
-            send_eoi(KEYBOARD_IRQ_NUM);
-            curr_executing_terminal_id = actual_executing_terminal_id;
-            video_mem = (char*) (VIDEO_MEM);
+            KEYBOARD_HANDLER_EPILOGUE(original_executing_terminal_id);
             sti();
             return;
         }
@@ -124,27 +133,15 @@ void keyboard_handler() {
                 }
                 break;
             case CODE_F1:
-                if (alt_pressed) {
-                    send_eoi(KEYBOARD_IRQ_NUM);
-                    curr_executing_terminal_id = actual_executing_terminal_id;
-                    video_mem = (char*) (VIDEO_MEM);
-                    term_video_switch(0);
-                }
-                break;
             case CODE_F2:
-                if (alt_pressed) {
-                    send_eoi(KEYBOARD_IRQ_NUM);
-                    curr_executing_terminal_id = actual_executing_terminal_id;
-                    video_mem = (char*) (VIDEO_MEM);
-                    term_video_switch(1);
-                }
-                break;
             case CODE_F3:
                 if (alt_pressed) {
-                    send_eoi(KEYBOARD_IRQ_NUM);
-                    curr_executing_terminal_id = actual_executing_terminal_id;
-                    video_mem = (char*) (VIDEO_MEM);
-                    term_video_switch(2);
+                    // Don't forget to restore keyboard display terminal context
+                    KEYBOARD_HANDLER_EPILOGUE(original_executing_terminal_id);
+                    // We know the scancodes are consecutive!
+                    term_video_switch(scancode - CODE_F1);
+                    sti();
+                    return;
                 }
                 break;
             default:
@@ -165,9 +162,7 @@ void keyboard_handler() {
                 break;
         }
     }
-    send_eoi(KEYBOARD_IRQ_NUM);
-    curr_executing_terminal_id = actual_executing_terminal_id;
-    video_mem = (char*) (VIDEO_MEM);
+    KEYBOARD_HANDLER_EPILOGUE(original_executing_terminal_id);
     sti();
 }
 

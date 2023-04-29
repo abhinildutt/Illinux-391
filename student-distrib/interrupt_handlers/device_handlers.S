@@ -22,5 +22,6 @@ interrupt_handler_name:        ;\
     POPAL                      ;\
     IRET
 
+DEFINE_TRAMPOLINE(pit_interrupt, pit_handler);
 DEFINE_TRAMPOLINE(rtc_interrupt, rtc_handler);
 DEFINE_TRAMPOLINE(keyboard_interrupt, keyboard_handler);

@@ -11,7 +11,8 @@
 #include "paging.h"
 #include "task.h"
 #include "filesystem/filesys_interface.h"
-#include "filesystem/filesys.h" 
+#include "filesystem/filesys.h"
+#include "devices/pit.h"
 #include "devices/rtc.h"
 #include "devices/keyboard.h"
 #include "devices/terminal.h"
@@ -161,6 +162,8 @@ void entry(unsigned long magic, unsigned long addr) {
     rtc_init();
     
     initialize_paging();
+
+    pit_init();
     
     /* Enable interrupts */
     /* Do not enable the following until after you have set up your
@@ -175,8 +178,7 @@ void entry(unsigned long magic, unsigned long addr) {
     launch_tests();
 #else
     /* Execute the first program ("shell") ... */
-    // switch_terminal(0);
-    execute((const uint8_t*) "shell");
+    // execute((const uint8_t*) "shell");
 #endif
 
     /* Spin (nicely, so we don't chew up cycles) */

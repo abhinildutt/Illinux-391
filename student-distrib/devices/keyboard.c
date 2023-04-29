@@ -32,6 +32,12 @@ void keyboard_init() {
  */
 void keyboard_handler() {
     cli();
+
+    // Keyboard should only ever be active on the currently shown terminal
+    term_context_switch(curr_displaying_terminal_id);
+    terminal_data_t curr_terminal = terminals[curr_displaying_terminal_id];
+    // printf("%d", curr_executing_terminal_id);
+
     uint8_t scancode = inb(KEYBOARD_DATA_PORT);
     if (scancode == CODE_EXTENDED) {
         is_extended = 1;
@@ -45,6 +51,7 @@ void keyboard_handler() {
         sti();
         return;
     }
+
     if (scancode >= RELEASED_SCANCODE_OFFSET) { // released
         scancode -= RELEASED_SCANCODE_OFFSET;
         if (scancode >= NUM_SCANCODES) {
@@ -74,22 +81,22 @@ void keyboard_handler() {
     } else { // pressed
         switch (scancode) {
             case CODE_BACKSPACE:
-                if (terminals[curr_terminal_id].keyboard_buffer_size > 0) {
+                if (curr_terminal.keyboard_buffer_size > 0) {
                     putc('\b');
-                    terminals[curr_terminal_id].keyboard_buffer_size--;
+                    terminals[curr_executing_terminal_id].keyboard_buffer_size--;
                 }
                 break;
             case CODE_TAB:
-                if (terminals[curr_terminal_id].keyboard_buffer_size < KBUFFER_SIZE) {
-                    terminals[curr_terminal_id].keyboard_buffer[terminals[curr_terminal_id].keyboard_buffer_size++] = '\t';
+                if (curr_terminal.keyboard_buffer_size < KBUFFER_SIZE) {
+                    curr_terminal.keyboard_buffer[curr_terminal.keyboard_buffer_size++] = '\t';
                     putc('\t');
                 }
                 break;
             case CODE_ENTER:
-                if (terminals[curr_terminal_id].keyboard_buffer_size < KBUFFER_SIZE) {
-                    terminals[curr_terminal_id].keyboard_buffer[terminals[curr_terminal_id].keyboard_buffer_size++] = '\n';
+                if (curr_terminal.keyboard_buffer_size < KBUFFER_SIZE) {
+                    curr_terminal.keyboard_buffer[curr_terminal.keyboard_buffer_size++] = '\n';
                     putc('\n');
-                    terminals[curr_terminal_id].is_done_typing = 1;
+                    curr_terminal.is_done_typing = 1;
                 }
                 break;
             case CODE_LEFT_CONTROL:
@@ -112,23 +119,23 @@ void keyboard_handler() {
                 break;
             case CODE_F1:
                 if (alt_pressed) {
-                    switch_terminal(0);
+                    term_video_switch(0);
                 }
                 break;
             case CODE_F2:
                 if (alt_pressed) {
-                    switch_terminal(1);
+                    term_video_switch(1);
                 }
                 break;
             case CODE_F3:
                 if (alt_pressed) {
-                    switch_terminal(2);
+                    term_video_switch(2);
                 }
                 break;
             default:
                 if (scancode == CODE_L && (left_control_pressed || right_control_pressed)) {
                     term_reset();
-                } else if (terminals[curr_terminal_id].keyboard_buffer_size < KBUFFER_SIZE) {
+                } else if (curr_terminal.keyboard_buffer_size < KBUFFER_SIZE) {
                     char c;
                     if (left_shift_pressed || right_shift_pressed) {
                         c = scancodeToKey[scancode][1];
@@ -137,7 +144,7 @@ void keyboard_handler() {
                     } else {
                         c = scancodeToKey[scancode][0];
                     }
-                    terminals[curr_terminal_id].keyboard_buffer[terminals[curr_terminal_id].keyboard_buffer_size++] = c;
+                    curr_terminal.keyboard_buffer[curr_terminal.keyboard_buffer_size++] = c;
                     putc(c);
                 }
                 break;
@@ -148,5 +155,5 @@ void keyboard_handler() {
 }
 
 void clear_kbuffer() {
-    terminals[curr_terminal_id].keyboard_buffer_size = 0;
+    terminals[curr_executing_terminal_id].keyboard_buffer_size = 0;
 }   

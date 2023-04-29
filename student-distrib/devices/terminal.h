@@ -28,10 +28,11 @@ typedef struct terminal_data {
     uint32_t cursor_x;
     uint32_t cursor_y;
 
-    int32_t active_pid;
+    int32_t curr_pid;
 } terminal_data_t;
 
-extern uint8_t curr_terminal_id;
+extern uint8_t curr_executing_terminal_id;
+extern uint8_t curr_displaying_terminal_id;
 extern terminal_data_t terminals[MAX_TERMINAL_ID];
 
 extern funcptrs stdin_fops;
@@ -50,6 +51,7 @@ extern void cursor_init();
 extern void cursor_set(uint32_t x, uint32_t y);
 
 int get_current_terminal_id();
-void switch_terminal(uint8_t terminal_id);
+void term_video_switch(uint8_t terminal_id);
+void term_context_switch(uint8_t terminal_id);
 
 #endif

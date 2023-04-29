@@ -18,8 +18,13 @@
  */
 int32_t _halt(uint32_t status) {
     if (curr_pid == -1) return -1;
+
+    cli();
     curr_pcb = get_pcb(curr_pid);
-    if (curr_pcb == NULL) return -1;
+    if (curr_pcb == NULL) {
+        sti();
+        return -1;
+    }
 
     // Close all task file descriptors
     int i;
@@ -32,7 +37,7 @@ int32_t _halt(uint32_t status) {
         // Unmap paging for current task
         // unmap_program(curr_pid);
         pcb_t* parent_pcb = get_pcb(curr_pcb->parent_pid);
-        map_program(curr_pcb->parent_pid, parent_pcb->is_vidmapped, parent_pcb->terminal_id, parent_pcb->terminal_id == curr_terminal_id);
+        map_program(curr_pcb->parent_pid, parent_pcb->is_vidmapped, parent_pcb->terminal_id, parent_pcb->terminal_id == curr_displaying_terminal_id);
         tss.ss0 = KERNEL_DS;
         // 8MB (bottom of 4MB kernel page) - 8KB (size of kernel stack) - 4B (to get to top of stack)
         tss.esp0 = KERNEL_STACK_ADDR - USER_KERNEL_STACK_SIZE * curr_pcb->parent_pid - 0x4;
@@ -41,8 +46,8 @@ int32_t _halt(uint32_t status) {
         curr_pcb = get_pcb(curr_pid);
         curr_pcb->active = 1;
 
-        // update terminal's active pid
-        terminals[curr_terminal_id].active_pid = curr_pid;
+        // Update terminal's current pid
+        terminals[curr_executing_terminal_id].curr_pid = curr_pid;
         
         // Restore stack pointers & put status code in eax
         asm volatile ("       \n \
@@ -63,6 +68,7 @@ int32_t _halt(uint32_t status) {
         // printf("restart shell\n");
         execute((const uint8_t*) "shell");
     }
+    sti();
     return 0;
 }
 
@@ -189,14 +195,14 @@ int32_t execute(const uint8_t* command) {
     prog_eip = *((uint32_t*) entry_buf);
 
     // Assign new PID to the current terminal
-    terminals[curr_terminal_id].active_pid = new_pid;
+    terminals[curr_executing_terminal_id].curr_pid = new_pid;
 
     pcb_t* pcb = get_pcb(new_pid);
-    pcb->terminal_id = curr_terminal_id;
+    pcb->terminal_id = curr_executing_terminal_id;
     pcb->is_vidmapped = 0;
 
     // Setup paging
-    map_program(new_pid, 0, curr_terminal_id, 1);
+    map_program(new_pid, 0, curr_executing_terminal_id, curr_executing_terminal_id == curr_displaying_terminal_id);
 
     // Load the executable
     // printf("length = %#x\n", inode_ptr[syscall_dentry.inode_num].length);
@@ -424,7 +430,7 @@ int32_t vidmap(uint8_t** screen_start) {
     curr_pcb = get_pcb(curr_pid);
     curr_pcb->is_vidmapped = 1;
     map_program(curr_pid, 1, 
-        curr_pcb->terminal_id, curr_terminal_id == curr_pcb->terminal_id);
+        curr_pcb->terminal_id, curr_displaying_terminal_id == curr_pcb->terminal_id);
 
     // write virtual video memory addr to screen_start
     *screen_start = (uint8_t*) PROGRAM_VIDEO_VIRTUAL_ADDR;

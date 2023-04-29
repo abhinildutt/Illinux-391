@@ -41,6 +41,7 @@ void initialize_paging() {
         page_table[i].global_page = 0;
         page_table[i].available = 0;
         page_table[i].page_addr = 0;
+        // || i == VIDEO_PERM_MEM_INDEX
         if (i == VIDEO_MEM_INDEX || i == VIDEO_PERM_MEM_INDEX) {
             page_table[i].present = 1;
             page_table[i].page_addr = VIDEO_MEM_INDEX;

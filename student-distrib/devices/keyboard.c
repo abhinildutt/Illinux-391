@@ -54,6 +54,7 @@ void keyboard_handler() {
     uint8_t actual_executing_terminal_id = curr_executing_terminal_id;
     curr_executing_terminal_id = curr_displaying_terminal_id;
     video_mem = (char*) (VIDEO_PERM_MEM_ADDR);
+    // video_mem = (char*) (VIDEO);
     terminal_data_t* curr_terminal = &terminals[curr_displaying_terminal_id];
 
     if (scancode >= RELEASED_SCANCODE_OFFSET) { // released
@@ -129,6 +130,9 @@ void keyboard_handler() {
                     curr_executing_terminal_id = actual_executing_terminal_id;
                     video_mem = (char*) (VIDEO_MEM);
                     term_video_switch(0);
+                    curr_executing_terminal_id = actual_executing_terminal_id;
+                    sti();
+                    return;
                 }
                 break;
             case CODE_F2:
@@ -137,6 +141,9 @@ void keyboard_handler() {
                     curr_executing_terminal_id = actual_executing_terminal_id;
                     video_mem = (char*) (VIDEO_MEM);
                     term_video_switch(1);
+                    curr_executing_terminal_id = actual_executing_terminal_id;
+                    sti();
+                    return;
                 }
                 break;
             case CODE_F3:
@@ -145,6 +152,9 @@ void keyboard_handler() {
                     curr_executing_terminal_id = actual_executing_terminal_id;
                     video_mem = (char*) (VIDEO_MEM);
                     term_video_switch(2);
+                    curr_executing_terminal_id = actual_executing_terminal_id;
+                    sti();
+                    return;
                 }
                 break;
             default:

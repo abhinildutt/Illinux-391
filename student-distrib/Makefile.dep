@@ -33,7 +33,8 @@ keyboard.o: devices/keyboard.c devices/keyboard.h devices/../lib.h \
   devices/../types.h devices/../i8259.h devices/keyboard_scancodes.h \
   devices/terminal.h devices/../types.h \
   devices/../filesystem/filesys_interface.h \
-  devices/../filesystem/../types.h devices/../devices/keyboard.h
+  devices/../filesystem/../types.h devices/../devices/keyboard.h \
+  devices/../address.h
 pit.o: devices/pit.c devices/pit.h devices/../lib.h devices/../types.h \
   devices/../i8259.h devices/../devices/terminal.h \
   devices/../devices/../lib.h devices/../devices/../types.h \

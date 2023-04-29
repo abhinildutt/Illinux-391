@@ -25,8 +25,6 @@ typedef struct terminal_data {
 
     uint32_t screen_x;
     uint32_t screen_y;
-    uint32_t cursor_x;
-    uint32_t cursor_y;
 
     int32_t curr_pid;
 } terminal_data_t;

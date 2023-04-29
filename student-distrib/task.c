@@ -13,9 +13,13 @@ pcb_t* curr_pcb = NULL;
  *   SIDE EFFECTS: none
  */
 void task_init() {
+    pcb_t* pcb;
     int32_t i;
     for (i = 0; i < MAX_PID_COUNT; i++) {
-        get_pcb(i)->active = 0;
+        pcb = get_pcb(i);
+        pcb->active = 0;
+        pcb->terminal_id = -1;
+        pcb->is_vidmapped = 0;
     }
 }
 

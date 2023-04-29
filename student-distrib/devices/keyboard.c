@@ -36,7 +36,7 @@ void keyboard_handler() {
     // Keyboard should only ever be active on the currently shown terminal
     term_context_switch(curr_displaying_terminal_id);
     terminal_data_t curr_terminal = terminals[curr_displaying_terminal_id];
-    // printf("%d", curr_executing_terminal_id);
+    printf("%d", curr_executing_terminal_id);
 
     uint8_t scancode = inb(KEYBOARD_DATA_PORT);
     if (scancode == CODE_EXTENDED) {

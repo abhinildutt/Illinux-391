@@ -64,8 +64,6 @@ void term_init() {
     for (i = 0; i < MAX_TERMINAL_ID; i++) {
         terminals[i].screen_x = 0;
         terminals[i].screen_y = 0;
-        terminals[i].cursor_y = 0;
-        terminals[i].cursor_y = 0;
         terminals[i].is_done_typing = 0;
         terminals[i].keyboard_buffer_size = 0;
         terminals[i].curr_pid = -1;
@@ -161,8 +159,6 @@ void cursor_init() {
     * Return Value: none
     * Function: Sets the cursor to the given coordinates */
 void cursor_set(uint32_t x, uint32_t y) {
-    terminals[curr_executing_terminal_id].cursor_x = x;
-    terminals[curr_executing_terminal_id].cursor_y = y;
     uint32_t pos = y * SCREEN_WIDTH + x;
     outb(CURSOR_LOCATION_HIGH, VGA_INDEX_PORT);
     outb(pos >> 8, VGA_DATA_PORT); // high 8 bits
@@ -182,7 +178,7 @@ void term_video_switch(uint8_t terminal_id) {
         
     curr_displaying_terminal_id = terminal_id;
     // map_program(curr_pid, curr_pcb->is_vidmapped, curr_pcb->terminal_id, curr_pcb->terminal_id == curr_displaying_terminal_id);
-    cursor_set(terminals[curr_displaying_terminal_id].cursor_x, terminals[curr_displaying_terminal_id].cursor_y);
+    cursor_set(terminals[curr_displaying_terminal_id].screen_x, terminals[curr_displaying_terminal_id].screen_y);
 }
 
 void term_context_switch(uint8_t terminal_id) {
@@ -228,7 +224,7 @@ void term_context_switch(uint8_t terminal_id) {
             : "ebp", "esp"
         );
     } else { // create new shell task
-        printf("launch\n");
+        // printf("launch\n");
         curr_pcb = NULL;
         execute((const uint8_t*) "shell");
     }

@@ -44,7 +44,6 @@ syscall_handler:
     PUSHL %EDI
     PUSHL %ESI
     PUSHL %EBP
-    PUSHFL
 
     # Call corresponding syscall
     PUSHL %EDX
@@ -56,7 +55,6 @@ syscall_handler:
     POPL %EBX
     POPL %ECX
     POPL %EDX
-    POPFL
     POPL %EBP
     POPL %ESI
     POPL %EDI

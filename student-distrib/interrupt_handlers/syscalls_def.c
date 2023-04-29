@@ -267,14 +267,28 @@ int32_t execute(const uint8_t* command) {
     // $0 = USER_DS, $1 = USER_ESP, $2 = USER_CS, $3 = prog_eip
     
     // OSDev wiki and hardware context switch DIAGRAM in mp3 appendix
+    // Bug: interrupts should be enabled in user process, but it's not rn
+    //      might have to modify flags directly
+    // uint32_t flags;
+    // do {
+    //     asm volatile ("          \
+    //             pushfl           ;\
+    //             popl %0          ;\
+    //             "                
+    //             : "=r"(flags)   
+    //             :               
+    //             : "memory", "cc"
+    //     );
+    // } while (0);
+
     asm volatile(" \
-        movw %%ax, %%ds    ;\
-        pushl %%eax        ;\
-        movl %%ebx, %%eax  ;\
-        pushl %%eax        ;\
-        pushfl             ;\
-        pushl %%ecx        ;\
-        pushl %%edx        ;\
+        movw %%ax, %%ds      ;\
+        pushl %%eax          ;\
+        movl %%ebx, %%eax    ;\
+        pushl %%eax          ;\
+        pushfl               ;\
+        pushl %%ecx          ;\
+        pushl %%edx          ;\
         iret               "
         :
         : "a"(USER_DS), "b"(pcb->esp) , "c"(USER_CS), "d"(pcb->eip)

@@ -104,12 +104,11 @@ int32_t term_close(fd_array_member_t* f) {
 int32_t term_read(fd_array_member_t* f, void* buf, int32_t nbytes) {
     if (buf == NULL) return -1;
 
-    sti();
     while (terminals[curr_executing_terminal_id].is_done_typing == 0) {
         asm volatile("hlt");
     }
-    cli();
 
+    cli();
     int i;
     for (i = 0; i < terminals[curr_executing_terminal_id].keyboard_buffer_size; i++) {
         ((char *) buf)[i] = terminals[curr_executing_terminal_id].keyboard_buffer[i];

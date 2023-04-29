@@ -12,7 +12,6 @@
  */
 void keyboard_init() {
     enable_irq(KEYBOARD_IRQ_NUM);
-    terminals[curr_terminal_id].keyboard_buffer_size = 0;
     is_extended = 0;
     caps_lock_toggle = 0;
     caps_lock_active = 0;
@@ -74,23 +73,6 @@ void keyboard_handler() {
                 break;
         }
     } else { // pressed
-        if(alt_pressed) {
-            switch (scancode)
-            {
-            case 0x3B: // F1
-                switch_terminal(0);
-                break;
-            case 0x3C: // F2
-                switch_terminal(1);
-                break;
-            case 0x3D: // F3
-                switch_terminal(2);
-                break;
-            default:
-                break;
-            }
-        }
-
         switch (scancode) {
             case CODE_BACKSPACE:
                 if (terminals[curr_terminal_id].keyboard_buffer_size > 0) {
@@ -99,13 +81,13 @@ void keyboard_handler() {
                 }
                 break;
             case CODE_TAB:
-                if (terminals[curr_terminal_id].keyboard_buffer_size < terminals[curr_terminal_id].keyboard_buffer_size) {
+                if (terminals[curr_terminal_id].keyboard_buffer_size < KBUFFER_SIZE) {
                     terminals[curr_terminal_id].keyboard_buffer[terminals[curr_terminal_id].keyboard_buffer_size++] = '\t';
                     putc('\t');
                 }
                 break;
             case CODE_ENTER:
-                if (terminals[curr_terminal_id].keyboard_buffer_size < terminals[curr_terminal_id].keyboard_buffer_size) {
+                if (terminals[curr_terminal_id].keyboard_buffer_size < KBUFFER_SIZE) {
                     terminals[curr_terminal_id].keyboard_buffer[terminals[curr_terminal_id].keyboard_buffer_size++] = '\n';
                     putc('\n');
                     done_typing = 1;
@@ -120,7 +102,7 @@ void keyboard_handler() {
             case CODE_RIGHT_SHIFT:
                 right_shift_pressed = 1;
                 break;
-            case CODE_ALT :
+            case CODE_ALT:
                 alt_pressed = 1;
                 break;
             case CODE_CAPS_LOCK:
@@ -129,10 +111,25 @@ void keyboard_handler() {
                     caps_lock_active = !caps_lock_active;
                 }
                 break;
+            case CODE_F1:
+                if (alt_pressed) {
+                    switch_terminal(0);
+                }
+                break;
+            case CODE_F2:
+                if (alt_pressed) {
+                    switch_terminal(1);
+                }
+                break;
+            case CODE_F3:
+                if (alt_pressed) {
+                    switch_terminal(2);
+                }
+                break;
             default:
                 if (scancode == CODE_L && (left_control_pressed || right_control_pressed)) {
                     term_reset();
-                } else if (terminals[curr_terminal_id].keyboard_buffer_size < terminals[curr_terminal_id].keyboard_buffer_size) {
+                } else if (terminals[curr_terminal_id].keyboard_buffer_size < KBUFFER_SIZE) {
                     char c;
                     if (left_shift_pressed || right_shift_pressed) {
                         c = scancodeToKey[scancode][1];

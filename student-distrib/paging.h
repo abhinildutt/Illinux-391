@@ -38,10 +38,8 @@ page_table_entry_t page_table[TABLE_SIZE] __attribute__((aligned(PAGE_SIZE_4KB))
 page_table_entry_t vidmap_page_table[TABLE_SIZE] __attribute__((aligned(PAGE_SIZE_4KB)));
 
 void initialize_paging();
-void map_program(int32_t pid);
+void map_program(int32_t pid, uint8_t is_vidmapped, uint32_t owning_terminal_id, uint8_t is_terminal_active);
 void unmap_program(int32_t pid);
-void map_video_mem();
-void unmap_video_mem();
 void flush_tlb();
 
 #endif

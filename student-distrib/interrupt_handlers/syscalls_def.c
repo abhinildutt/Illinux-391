@@ -31,8 +31,8 @@ int32_t _halt(uint32_t status) {
     if (curr_pcb->parent_pid != -1) { // parent exists, return to parent
         // Unmap paging for current task
         // unmap_program(curr_pid);
-
-        map_program(curr_pcb->parent_pid);
+        pcb_t* parent_pcb = get_pcb(curr_pcb->parent_pid);
+        map_program(curr_pcb->parent_pid, parent_pcb->is_vidmapped, parent_pcb->terminal_id, parent_pcb->terminal_id == curr_terminal_id);
         tss.ss0 = KERNEL_DS;
         // 8MB (bottom of 4MB kernel page) - 8KB (size of kernel stack) - 4B (to get to top of stack)
         tss.esp0 = KERNEL_STACK_ADDR - USER_KERNEL_STACK_SIZE * curr_pcb->parent_pid - 0x4;
@@ -182,17 +182,21 @@ int32_t execute(const uint8_t* command) {
         return -1;
     }
 
-    // Assign new PID to the current terminal
-    terminals[curr_terminal_id].active_pid = new_pid;
-
     uint8_t entry_buf[4];
     // Getting the eip
     // Per docs, The EIP you need to jump to is the entry point from bytes 24-27 of the executable
     read_data(syscall_dentry.inode_num, PROGRAM_ENTRY_POINT, entry_buf, sizeof(int32_t));
     prog_eip = *((uint32_t*) entry_buf);
 
+    // Assign new PID to the current terminal
+    terminals[curr_terminal_id].active_pid = new_pid;
+
+    pcb_t* pcb = get_pcb(new_pid);
+    pcb->terminal_id = curr_terminal_id;
+    pcb->is_vidmapped = 0;
+
     // Setup paging
-    map_program(new_pid);
+    map_program(new_pid, 0, curr_terminal_id, 1);
 
     // Load the executable
     // printf("length = %#x\n", inode_ptr[syscall_dentry.inode_num].length);
@@ -202,7 +206,6 @@ int32_t execute(const uint8_t* command) {
     // printf("header = %#x\n", *((uint32_t*) (PROGRAM_IMAGE_VIRTUAL_ADDR)));
 
     // Init new FS array
-    pcb_t* pcb = get_pcb(new_pid);
     fs_interface_init(pcb->fd_array);
 
     // store file_arg in task state (pcb)
@@ -418,7 +421,11 @@ int32_t vidmap(uint8_t** screen_start) {
     if ((uint32_t) screen_start < USER_STACK_VIRTUAL_ADDR) return -1;
     if ((uint32_t) screen_start > USER_STACK_VIRTUAL_ADDR + PAGE_SIZE_4MB) return -1;
 
-    map_video_mem();
+    curr_pcb = get_pcb(curr_pid);
+    curr_pcb->is_vidmapped = 1;
+    map_program(curr_pid, 1, 
+        curr_pcb->terminal_id, curr_terminal_id == curr_pcb->terminal_id);
+
     // write virtual video memory addr to screen_start
     *screen_start = (uint8_t*) PROGRAM_VIDEO_VIRTUAL_ADDR;
     return 0;

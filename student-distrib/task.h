@@ -17,6 +17,8 @@ typedef struct pcb {
     uint32_t ebp;
     uint8_t file_arg[FILE_NAME_LEN];
     uint32_t active;
+    uint32_t terminal_id;
+    uint8_t is_vidmapped;
 } pcb_t;
 
 extern int32_t curr_pid;

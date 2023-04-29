@@ -56,15 +56,21 @@ void term_reset() {
     * Return Value: none
     * Function: Initializes the terminal */
 void term_init() {
-    int i;
+    uint32_t backing_video_page;
+    int32_t i, j;
     for (i = 0; i < MAX_TERMINAL_ID; i++) {
         terminals[i].screen_x = 0;
         terminals[i].screen_y = 0;
         terminals[i].cursor_y = 0;
         terminals[i].cursor_y = 0;
         terminals[i].keyboard_buffer_size = 0;
-        terminals[i].vidmem = VIDEO_MEM + i * PAGE_SIZE_4KB;
         terminals[i].active_pid = -1;
+
+        backing_video_page = VIDEO_MEM_BACKGROUND_START_ADDR + i * PAGE_SIZE_4KB;
+        for (j = 0; j < NUM_ROWS * NUM_COLS; j++) {
+            *(uint8_t *)(backing_video_page + (j << 1)) = ' ';
+            *(uint8_t *)(backing_video_page + (j << 1) + 1) = ATTRIB;
+        }
     }
     cursor_init();
     term_reset();
@@ -162,8 +168,9 @@ void switch_terminal(uint8_t terminal_id) {
     if (curr_terminal_id == terminal_id) return;
     if (terminal_id >= MAX_TERMINAL_ID) return;
 
-    memcpy((void*) terminals[curr_terminal_id].vidmem, (const void*) VIDEO_MEM, PAGE_SIZE_4KB);
-    memcpy((void*) VIDEO_MEM, (const void*) terminals[terminal_id].vidmem, PAGE_SIZE_4KB);
+    memcpy((void*) (VIDEO_MEM_BACKGROUND_START_ADDR + curr_terminal_id * PAGE_SIZE_4KB), 
+        (const void*) VIDEO_MEM, PAGE_SIZE_4KB);
+    memcpy((void*) VIDEO_MEM, (const void*) (VIDEO_MEM_BACKGROUND_START_ADDR + terminal_id * PAGE_SIZE_4KB), PAGE_SIZE_4KB);
 
     curr_terminal_id = terminal_id;
     cursor_set(terminals[curr_terminal_id].cursor_x, terminals[curr_terminal_id].cursor_y);

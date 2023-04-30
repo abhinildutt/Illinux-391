@@ -69,7 +69,8 @@ void rtc_handler() {
 /* 
  * rtc_open
  *   DESCRIPTION: Initialize RTC frequency to 2HZ.
- *   INPUTS: filename -- filename to open
+ *   INPUTS: f -- file descriptor struct
+ *           filename -- filename to open
  *   OUTPUTS: none
  *   RETURN VALUE: none
  *   SIDE EFFECTS: none
@@ -85,7 +86,7 @@ int32_t rtc_open(fd_array_member_t* f, const uint8_t* filename) {
 /* 
  * rtc_close
  *   DESCRIPTION: Close RTC.
- *   INPUTS: fd -- file descriptor
+ *   INPUTS: f -- file descriptor struct
  *   OUTPUTS: none
  *   RETURN VALUE: none
  *   SIDE EFFECTS: none
@@ -98,7 +99,7 @@ int32_t rtc_close(fd_array_member_t* f) {
 /* 
  * rtc_read
  *   DESCRIPTION: Block until the next interrupt.
- *   INPUTS: f -- file descriptor
+ *   INPUTS: f -- file descriptor struct
  *           buf -- buffer to read from
  *           nbytes -- number of bytes to read
  *   OUTPUTS: none
@@ -129,7 +130,7 @@ int32_t rtc_read(fd_array_member_t* f, void* buf, int32_t nbytes) {
 /* 
  * rtc_write
  *   DESCRIPTION: Set RTC frequency.
- *   INPUTS: fd -- file descriptor
+ *   INPUTS: f -- file descriptor struct
  *           buf -- buffer to read from
  *           nbytes -- number of bytes to read
  *   OUTPUTS: none

@@ -25,39 +25,55 @@ uint8_t curr_executing_terminal_id = 0;
 uint8_t curr_displaying_terminal_id = 0;
 terminal_data_t terminals[MAX_TERMINAL_ID];
 
-/* Terminal Write Bad Call
-    * Inputs: f - the file descriptor
-    *         buf - the buffer to write from
-    *         nbytes - the number of bytes to write
-    * Return Value: -1
-    * Function: Returns -1, since can't write to stdin */
+/*
+ * stdin_write_bad_call
+ *   DESCRIPTION: No-op function for invalid stdin write
+ *   INPUTS: f -- file descriptor struct
+ *           buf -- buffer to write to
+ &           nbytes -- the number of bytes to write
+ *   OUTPUTS: none
+ *   RETURN VALUE: -1 since can't write to stdin
+ *   SIDE EFFECTS: none
+ */
 int32_t stdin_write_bad_call(fd_array_member_t *f, const void *buf, int32_t nbytes) {
     return -1;
 }
 
-/* Terminal Read Bad Call
-    * Inputs: f - the file descriptor
-    *         buf - the buffer to read into
-    *         nbytes - the number of bytes to read
-    * Return Value: -1
-    * Function: Returns -1, since can't read from stdout */
+/*
+ * stdout_read_bad_call
+ *   DESCRIPTION: No-op function for invalid stdout read
+ *   INPUTS: f -- file descriptor struct
+ *           buf -- buffer to write to
+ &           nbytes -- the number of bytes to write
+ *   OUTPUTS: none
+ *   RETURN VALUE: -1 since can't read from stdout
+ *   SIDE EFFECTS: none
+ */
 int32_t stdout_read_bad_call(fd_array_member_t *f, void *buf, int32_t nbytes) {
     return -1;
 }
 
-/* Terminal Reset
-    * Inputs: none
-    * Return Value: none
-    * Function: Clears the screen and resets the cursor to the top left corner */
+/*
+ * term_reset
+ *   DESCRIPTION: Clears the screen and resets the cursor to the top left corner
+ *   INPUTS: none
+ *   OUTPUTS: none
+ *   RETURN VALUE: none
+ *   SIDE EFFECTS: clears screen & sets cursor to (0, 0)
+ */
 void term_reset() {
     clear();
     cursor_set(0, 0);
 }
 
-/* Terminal Init
-    * Inputs: none
-    * Return Value: none
-    * Function: Initializes the terminal */
+/*
+ * term_init
+ *   DESCRIPTION: Initializes the terminal.
+ *   INPUTS: none
+ *   OUTPUTS: none
+ *   RETURN VALUE: none
+ *   SIDE EFFECTS: initializes the cursor & resets the terminal
+ */
 void term_init() {
     uint32_t backing_video_page;
     int32_t i, j;
@@ -84,28 +100,42 @@ void term_init() {
     return;
 }
 
-/* Terminal Open
-    * Inputs: filename - the name of the file to open
-    * Return Value: 0
-    * Function: Opens the terminal */
+/*
+ * term_open
+ *   DESCRIPTION: Opens the terminal.
+ *   INPUTS: f -- file descriptor struct
+ *           filename -- the name of the file to open (unused)
+ *   OUTPUTS: none
+ *   RETURN VALUE: 0 for success
+ *   SIDE EFFECTS: resets the terminal's keyboard buffer
+ */
 int32_t term_open(fd_array_member_t* f, const uint8_t* filename) {
     terminals[curr_executing_terminal_id].keyboard_buffer_size = 0;
     return 0;
 }
 
-/* Terminal Close
-    * Inputs: none
-    * Return Value: -1
-    * Function: Doesn't do anything, since can't close terminal */
+/*
+ * term_close
+ *   DESCRIPTION: Does nothing.
+ *   INPUTS: f -- file descriptor struct
+ *           filename -- the name of the file to open (unused)
+ *   OUTPUTS: none
+ *   RETURN VALUE: 0 for success
+ *   SIDE EFFECTS: resets the terminal's keyboard buffer
+ */
 int32_t term_close(fd_array_member_t* f) {
     return -1;
 }
 
-/* Terminal Read
-    * Inputs: buf - the buffer to read into
-    *         nbytes - the number of bytes to read
-    * Return Value: the number of bytes read
-    * Function: Reads from the terminal */
+/*
+ * term_read
+ *   DESCRIPTION: Reads from the terminal input buffer.
+ *   INPUTS: buf -- the buffer to read into
+ *           nbytes -- the number of bytes to read
+ *   OUTPUTS: none
+ *   RETURN VALUE: 0 for success, -1 for failrure
+ *   SIDE EFFECTS: resets the terminal's keyboard buffer once done
+ */
 int32_t term_read(fd_array_member_t* f, void* buf, int32_t nbytes) {
     if (buf == NULL) return -1;
 
@@ -128,11 +158,15 @@ int32_t term_read(fd_array_member_t* f, void* buf, int32_t nbytes) {
     return i + 1;
 }
 
-/* Terminal Write
-    * Inputs: buf - the buffer to write from
-    *         nbytes - the number of bytes to write
-    * Return Value: the number of bytes written
-    * Function: Writes to the terminal */
+/*
+ * term_write
+ *   DESCRIPTION: Writes to the terminal.
+ *   INPUTS: buf -- the buffer to write from
+ *           nbytes -- the number of bytes to read
+ *   OUTPUTS: none
+ *   RETURN VALUE: 0 for success, -1 for failrure
+ *   SIDE EFFECTS: prints buffer to the screen
+ */
 int32_t term_write(fd_array_member_t* f, const void* buf, int32_t nbytes) {
     if (buf == NULL) return -1;
     int i;
@@ -146,10 +180,14 @@ int32_t term_write(fd_array_member_t* f, const void* buf, int32_t nbytes) {
     return nbytes;
 }
 
-/* Cursor Init
-    * Inputs: none
-    * Return Value: none
-    * Function: Initializes the cursor */
+/*
+ * cursor_init
+ *   DESCRIPTION: Initializes the cursor.
+ *   INPUTS: none
+ *   OUTPUTS: none
+ *   RETURN VALUE: none
+ *   SIDE EFFECTS: initializes the cursor.
+ */
 void cursor_init() {
     outb(CURSOR_START, VGA_INDEX_PORT);
     char data = inb(VGA_DATA_PORT);
@@ -158,11 +196,15 @@ void cursor_init() {
     outb(data & 0xDF, VGA_DATA_PORT);
 }
 
-/* Cursor Set
-    * Inputs: x - the x coordinate of the cursor
-    *         y - the y coordinate of the cursor
-    * Return Value: none
-    * Function: Sets the cursor to the given coordinates */
+/*
+ * cursor_set
+ *   DESCRIPTION: Sets the cursor to the given coordinates.
+ *   INPUTS: x -- the x coordinate of the cursor
+ *           y -- the y coordinate of the cursor
+ *   OUTPUTS: none
+ *   RETURN VALUE: none
+ *   SIDE EFFECTS: sets the cursor position.
+ */
 void cursor_set(uint32_t x, uint32_t y) {
     uint32_t pos = y * SCREEN_WIDTH + x;
     outb(CURSOR_LOCATION_HIGH, VGA_INDEX_PORT);
@@ -171,10 +213,14 @@ void cursor_set(uint32_t x, uint32_t y) {
     outb(pos, VGA_DATA_PORT);
 }
 
-/* Term Video Switch 
-    * Inputs: terminal_id - the id of the terminal to switch to
-    * Return Value: none
-    * Function: Switches the video memory to the given terminal */
+/*
+ * term_video_switch
+ *   DESCRIPTION: Switches the video memory to the given terminal.
+ *   INPUTS: terminal_id -- the id of the terminal to switch to
+ *   OUTPUTS: none
+ *   RETURN VALUE: none
+ *   SIDE EFFECTS: sets the current display memory & remaps program paging.
+ */
 void term_video_switch(uint8_t terminal_id) {
     if (curr_displaying_terminal_id == terminal_id) return;
     if (terminal_id >= MAX_TERMINAL_ID) return;
@@ -195,10 +241,14 @@ void term_video_switch(uint8_t terminal_id) {
     cursor_set(terminals[curr_displaying_terminal_id].screen_x, terminals[curr_displaying_terminal_id].screen_y);
 }
 
-/* Term Context Switch 
-    * Inputs: terminal_id - the id of the terminal to switch to
-    * Return Value: none
-    * Function: Switches the context to the given terminal */
+/*
+ * term_context_switch
+ *   DESCRIPTION: Switches to the task context of the given terminal.
+ *   INPUTS: terminal_id -- the id of the terminal to switch to
+ *   OUTPUTS: none
+ *   RETURN VALUE: none
+ *   SIDE EFFECTS: sets the current display memory & remaps program paging.
+ */
 void term_context_switch(uint8_t terminal_id) {
     if (curr_executing_terminal_id == terminal_id) return;
     if (terminal_id >= MAX_TERMINAL_ID) return;

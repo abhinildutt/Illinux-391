@@ -71,6 +71,7 @@ void keyboard_handler() {
     if (scancode >= RELEASED_SCANCODE_OFFSET) { // released
         scancode -= RELEASED_SCANCODE_OFFSET;
 
+        // Supports right alt
         if (is_extended && scancode != CODE_ALT) {
             KEYBOARD_HANDLER_EPILOGUE(original_executing_terminal_id);
             is_extended = 0;
@@ -106,6 +107,7 @@ void keyboard_handler() {
 
     } else { // pressed
 
+        // Supports right alt
         if (is_extended && scancode != CODE_ALT) {
             KEYBOARD_HANDLER_EPILOGUE(original_executing_terminal_id);
             sti();

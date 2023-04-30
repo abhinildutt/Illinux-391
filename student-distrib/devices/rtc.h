@@ -16,6 +16,7 @@
 #define disable_NMI_A   0x8A
 #define disable_NMI_B   0x8B
 #define disable_NMI_C   0x8C
+#define RTC_FREQ       1024
 
 extern funcptrs rtc_fops;
 
@@ -29,7 +30,7 @@ void rtc_handler();
 int32_t set_rtc_freq(int32_t freq);
 int32_t freq_to_rate(int32_t freq);
 
-int32_t interrupt_flag;
-int32_t interrupt_counter;
+// int32_t interrupt_flag;
+// int32_t interrupt_counter;
 
 #endif

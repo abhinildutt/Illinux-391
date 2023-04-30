@@ -1,7 +1,7 @@
 #include "rtc.h"
 #include "../lib.h"
 #include "../i8259.h"
-
+#include "../devices/terminal.h"
 #define bit6 0x40
 #define MAX_RTC_FREQ 1024
 #define RESET_FREQ 2
@@ -24,7 +24,7 @@ funcptrs rtc_fops = {
  */
 void rtc_init() {
     // Adapted from https://wiki.osdev.org/RTC#Turning_on_IRQ_8
-    interrupt_flag = 0;
+    // interrupt_flag = 0;
     // interrupt_counter = 0;
     cli();
     outb(disable_NMI_B, RTC_PORT);   // select register B, and disable NMI
@@ -44,7 +44,7 @@ void rtc_init() {
  *   SIDE EFFECTS: reads available data and acknowledges interrupt
  */
 void rtc_handler() {
-    interrupt_flag = 1;
+    int i;
     
     // test_interrupts();
     // Print 1 character for every interrupt
@@ -53,6 +53,16 @@ void rtc_handler() {
 
     outb(disable_NMI_C, RTC_PORT);
     inb(RTC_DATA); // drop unneeded data
+
+    for (i = 0; i< MAX_TERMINAL_ID; i++){
+        if (terminals[curr_executing_terminal_id].rtc_counter > 0){
+            terminals[curr_executing_terminal_id].rtc_counter--;
+        }
+        else{
+            terminals[curr_executing_terminal_id].rtc_counter = terminals[curr_executing_terminal_id].rtc_freq;
+            terminals[curr_executing_terminal_id].rtc_flag = 1;
+        }
+    }
     send_eoi(RTC_IRQ_NUM);
 }
 
@@ -65,7 +75,10 @@ void rtc_handler() {
  *   SIDE EFFECTS: none
  */
 int32_t rtc_open(fd_array_member_t* f, const uint8_t* filename) {
-    set_rtc_freq(RESET_FREQ);
+    // set_rtc_freq(RESET_FREQ);
+    terminals[curr_executing_terminal_id].rtc_freq = RTC_FREQ/RESET_FREQ;
+    terminals[curr_executing_terminal_id].rtc_counter = RESET_FREQ;
+    terminals[curr_executing_terminal_id].rtc_enabled = 1;
     return 0;
 }
 
@@ -79,19 +92,38 @@ int32_t rtc_open(fd_array_member_t* f, const uint8_t* filename) {
  */
 int32_t rtc_close(fd_array_member_t* f) {
     // Does nothing since we don't virtualize RTC, return 0
+    terminals[curr_executing_terminal_id].rtc_enabled = 0;
     return 0;
 }
 
-
+/* 
+ * rtc_read
+ *   DESCRIPTION: Block until the next interrupt.
+ *   INPUTS: f -- file descriptor
+ *           buf -- buffer to read from
+ *           nbytes -- number of bytes to read
+ *   OUTPUTS: none
+ *   RETURN VALUE: 0 
+ *   SIDE EFFECTS: none
+ */
 int32_t rtc_read(fd_array_member_t* f, void* buf, int32_t nbytes) {
     // Block until the next interrupt
     // Wait until the interrupt handler clears interrupt_flag, then return 0
-    sti();
-    while (!interrupt_flag) {
-        // Do nothing
-        asm volatile("hlt");
+
+    if (terminals[curr_executing_terminal_id].rtc_enabled == 1){
+        terminals[curr_executing_terminal_id].rtc_flag = 0;
     }
-    interrupt_flag = 0;
+    sti();
+    // while (!interrupt_flag) {
+    //     // Do nothing
+    //     asm volatile("hlt");
+    // }
+    // interrupt_flag = 0;
+
+    while (terminals[curr_executing_terminal_id].rtc_flag == 0);
+
+    cli();
+
     return 0;
 }
 
@@ -111,7 +143,14 @@ int32_t rtc_write(fd_array_member_t* f, const void* buf, int32_t nbytes) {
     // and should set the rate of periodic interrupts accordingly
     if(nbytes != 4) return -1;
     int32_t freq = *((int32_t*)buf);
-    return set_rtc_freq(freq);
+    //return set_rtc_freq(freq);
+    if(freq < RESET_FREQ || freq > MAX_RTC_FREQ) return -1;
+    if (!(freq & (freq - 1)) != 1) return -1; // Check if power of 2
+
+
+    terminals[curr_executing_terminal_id].rtc_freq = RTC_FREQ/freq;
+    terminals[curr_executing_terminal_id].rtc_counter = terminals[curr_executing_terminal_id].rtc_freq;
+    return 0;
 }
 
 /* 

@@ -11,4 +11,13 @@ Soltuion: In paging.c  it was index instead of addr and we were adding the wrong
 Soltuion: Setting the executing terminal's cursor values when switching
 
 5. Running programs occasionally page faults
-Soltuion: 
+Soltuion:  Setting interrupts properly 
+
+ 6. Typing after the counter starts it never reaches the keyboard handler
+ Solution: Had to change to trap vs interrupt gate
+
+ 7. Switching too quickly between screens breaks
+ Soltuion:  The currently running process that was in the background is now in the foreground so curr_pcb->terminal_id == curr_displaying_terminal_id becomes true and we must map it directly to the screen
+
+ 8. RTC frequency could not be different for multiple programs:
+ Soltuion: Virtualize the RTC

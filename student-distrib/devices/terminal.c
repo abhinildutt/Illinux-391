@@ -68,6 +68,11 @@ void term_init() {
         terminals[i].keyboard_buffer_size = 0;
         terminals[i].curr_pid = -1;
 
+        terminals[i].rtc_enabled = 0;
+        terminals[i].rtc_freq = 0;
+        terminals[i].rtc_counter = 0;
+        terminals[i].rtc_flag = 0;
+
         backing_video_page = VIDEO_MEM_BACKGROUND_START_ADDR + i * PAGE_SIZE_4KB;
         for (j = 0; j < NUM_ROWS * NUM_COLS; j++) {
             *(uint8_t *)(backing_video_page + (j << 1)) = ' ';
@@ -104,6 +109,7 @@ int32_t term_close(fd_array_member_t* f) {
 int32_t term_read(fd_array_member_t* f, void* buf, int32_t nbytes) {
     if (buf == NULL) return -1;
 
+    // Wait until user is done typing
     while (terminals[curr_executing_terminal_id].is_done_typing == 0) {
         asm volatile("hlt");
     }
@@ -165,6 +171,10 @@ void cursor_set(uint32_t x, uint32_t y) {
     outb(pos, VGA_DATA_PORT);
 }
 
+/* Term Video Switch 
+    * Inputs: terminal_id - the id of the terminal to switch to
+    * Return Value: none
+    * Function: Switches the video memory to the given terminal */
 void term_video_switch(uint8_t terminal_id) {
     if (curr_displaying_terminal_id == terminal_id) return;
     if (terminal_id >= MAX_TERMINAL_ID) return;
@@ -173,13 +183,22 @@ void term_video_switch(uint8_t terminal_id) {
     memcpy((void*) (VIDEO_MEM_BACKGROUND_START_ADDR + curr_displaying_terminal_id * PAGE_SIZE_4KB), 
         (const void*) VIDEO_PERM_MEM_ADDR, PAGE_SIZE_4KB);
     curr_displaying_terminal_id = terminal_id;
+
+    // Previously background task is now being displayed, update paging accordingly
+    map_program(curr_pid, curr_pcb->is_vidmapped, curr_pcb->terminal_id, curr_pcb->terminal_id == curr_displaying_terminal_id);
+
     // Copy target terminal background video memory to video memory
     memcpy((void*) VIDEO_PERM_MEM_ADDR, 
         (const void*) (VIDEO_MEM_BACKGROUND_START_ADDR + curr_displaying_terminal_id * PAGE_SIZE_4KB), PAGE_SIZE_4KB);
 
+
     cursor_set(terminals[curr_displaying_terminal_id].screen_x, terminals[curr_displaying_terminal_id].screen_y);
 }
 
+/* Term Context Switch 
+    * Inputs: terminal_id - the id of the terminal to switch to
+    * Return Value: none
+    * Function: Switches the context to the given terminal */
 void term_context_switch(uint8_t terminal_id) {
     if (curr_executing_terminal_id == terminal_id) return;
     if (terminal_id >= MAX_TERMINAL_ID) return;

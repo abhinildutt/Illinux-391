@@ -262,7 +262,7 @@ int32_t execute(const uint8_t* command) {
 
     // sti();
 
-    // printf("switch time\n");
+    /* printf("switch time\n");
     // PUSH before IRET for context switching
     // $0 = USER_DS, $1 = USER_ESP, $2 = USER_CS, $3 = prog_eip
     
@@ -281,7 +281,7 @@ int32_t execute(const uint8_t* command) {
     //     );
     // } while (0);
     // Forcible enable interrupts by modifying EFLAGS
-    // bit 9 = IF (interrupt enable flag)
+    // bit 9 = IF (interrupt enable flag) */
     asm volatile(" \
         movw %%ax, %%ds      ;\
         pushl %%eax          ;\

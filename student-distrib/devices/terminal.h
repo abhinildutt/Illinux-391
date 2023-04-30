@@ -27,6 +27,13 @@ typedef struct terminal_data {
     uint32_t screen_y;
 
     int32_t curr_pid;
+
+    int32_t rtc_enabled;
+    int32_t rtc_freq;
+    int32_t rtc_counter;
+    int32_t rtc_flag;
+
+    
 } terminal_data_t;
 
 extern uint8_t curr_executing_terminal_id;

@@ -1,0 +1,14 @@
+1. Running ping pong on one terminal, wrote to all other terminals even after switching.
+Solution: Video mapping was not updated correctly when switching
+
+2. Can not call execute 3 times in kernel becuase it would never return
+Soltuion: initialize other terminals on switch
+
+3. Program was page faulting on switching
+Soltuion: In paging.c  it was index instead of addr and we were adding the wrong offset
+
+4. Cursor was not working between terminals
+Soltuion: Setting the executing terminal's cursor values when switching
+
+5. Running programs occasionally page faults
+Soltuion: 

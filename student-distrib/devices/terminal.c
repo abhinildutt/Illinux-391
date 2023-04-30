@@ -104,6 +104,7 @@ int32_t term_close(fd_array_member_t* f) {
 int32_t term_read(fd_array_member_t* f, void* buf, int32_t nbytes) {
     if (buf == NULL) return -1;
 
+    sti();
     while (terminals[curr_executing_terminal_id].is_done_typing == 0) {
         asm volatile("hlt");
     }
@@ -206,20 +207,20 @@ void term_context_switch(uint8_t terminal_id) {
     // printf("now executing tid=%d pid=%d\n", curr_executing_terminal_id, curr_pid);
     if (curr_pid != -1) { // switch to already running task
         // basically copied from halt, but we aren't returning to a parent
-        curr_pcb = get_pcb(curr_pid);
-        map_program(curr_pid, curr_pcb->is_vidmapped, curr_pcb->terminal_id, curr_pcb->terminal_id == curr_displaying_terminal_id);
         tss.ss0 = KERNEL_DS;
         // 8MB (bottom of 4MB kernel page) - 8KB (size of kernel stack) - 4B (to get to top of stack)
         tss.esp0 = KERNEL_STACK_ADDR - USER_KERNEL_STACK_SIZE * curr_pid - 0x4;
+        curr_pcb = get_pcb(curr_pid);
+        map_program(curr_pid, curr_pcb->is_vidmapped, curr_pcb->terminal_id, curr_pcb->terminal_id == curr_displaying_terminal_id);
         
         // Restore stack pointers (no status code this time)
         asm volatile ("       \n \
-            movl %%ebx, %%esp \n \
-            movl %%ecx, %%ebp \n \
+            movl %0, %%esp \n \
+            movl %1, %%ebp \n \
             "
             :
-            : "b" (curr_pcb->esp), "c" (curr_pcb->ebp)
-            : "ebp", "esp"
+            : "r" (curr_pcb->esp), "r" (curr_pcb->ebp)
+            : "esp", "ebp"
         );
     } else { // create new shell task
         // printf("launch\n");

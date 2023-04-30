@@ -9,16 +9,16 @@
 #define FILE_NAME_LEN 32
 
 typedef struct pcb {
-    int32_t pid;
-    int32_t parent_pid;
-    fd_array_member_t fd_array[MAX_FILE_COUNT];
-    uint32_t esp;
-    uint32_t eip;
-    uint32_t ebp;
-    uint8_t file_arg[FILE_NAME_LEN];
-    uint32_t active;
-    uint32_t terminal_id;
-    uint8_t is_vidmapped;
+    int32_t pid;                                // pid
+    int32_t parent_pid;                         // parent's pid (-1 if none)
+    fd_array_member_t fd_array[MAX_FILE_COUNT]; // file descriptor array
+    uint32_t esp;                               // ESP stored for context switches
+    uint32_t eip;                               // EIP of the task
+    uint32_t ebp;                               // EBP stored for context switches
+    uint8_t file_arg[FILE_NAME_LEN];            // launch argument
+    uint32_t active;                            // whether the task is active
+    uint32_t terminal_id;                       // terminal the task is runnning on
+    uint8_t is_vidmapped;                       // whether vidmap was called
 } pcb_t;
 
 extern int32_t curr_pid;

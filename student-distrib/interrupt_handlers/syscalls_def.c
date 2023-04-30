@@ -183,7 +183,7 @@ int32_t execute(const uint8_t* command) {
     // Get new PID
     int32_t new_pid = get_new_pid(); 
     if (new_pid == -1) {
-        // printf("NO AVAILABLE PID's\n");
+        printf("Maximum number of tasks reached.\n");
         sti();
         return -1;
     }

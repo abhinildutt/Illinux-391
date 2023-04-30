@@ -45,7 +45,13 @@ pit.o: devices/pit.c devices/pit.h devices/../lib.h devices/../types.h \
   devices/../devices/../devices/../i8259.h
 rtc.o: devices/rtc.c devices/rtc.h devices/../lib.h devices/../types.h \
   devices/../filesystem/filesys_interface.h \
-  devices/../filesystem/../types.h devices/../i8259.h
+  devices/../filesystem/../types.h devices/../i8259.h \
+  devices/../devices/terminal.h devices/../devices/../lib.h \
+  devices/../devices/../types.h \
+  devices/../devices/../filesystem/filesys_interface.h \
+  devices/../devices/../devices/keyboard.h \
+  devices/../devices/../devices/../lib.h \
+  devices/../devices/../devices/../i8259.h
 terminal.o: devices/terminal.c devices/terminal.h devices/../lib.h \
   devices/../types.h devices/../types.h \
   devices/../filesystem/filesys_interface.h \

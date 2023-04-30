@@ -173,6 +173,10 @@ void term_video_switch(uint8_t terminal_id) {
     memcpy((void*) (VIDEO_MEM_BACKGROUND_START_ADDR + curr_displaying_terminal_id * PAGE_SIZE_4KB), 
         (const void*) VIDEO_PERM_MEM_ADDR, PAGE_SIZE_4KB);
     curr_displaying_terminal_id = terminal_id;
+
+    // Previously background task is now being displayed, update paging accordingly
+    map_program(curr_pid, curr_pcb->is_vidmapped, curr_pcb->terminal_id, curr_pcb->terminal_id == curr_displaying_terminal_id);
+
     // Copy target terminal background video memory to video memory
     memcpy((void*) VIDEO_PERM_MEM_ADDR, 
         (const void*) (VIDEO_MEM_BACKGROUND_START_ADDR + curr_displaying_terminal_id * PAGE_SIZE_4KB), PAGE_SIZE_4KB);

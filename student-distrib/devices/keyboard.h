@@ -11,7 +11,7 @@
 
 #define KBUFFER_SIZE 128
 
-uint8_t is_extended;
+// uint8_t is_extended;
 uint8_t caps_lock_toggle;
 uint8_t caps_lock_active;
 uint8_t left_control_pressed;

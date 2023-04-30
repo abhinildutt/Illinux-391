@@ -14,7 +14,7 @@
  */
 void keyboard_init() {
     enable_irq(KEYBOARD_IRQ_NUM);
-    is_extended = 0;
+    // is_extended = 0;
     caps_lock_toggle = 0;
     caps_lock_active = 0;
     left_control_pressed = 0;
@@ -36,18 +36,19 @@ void keyboard_handler() {
     cli();
 
     uint8_t scancode = inb(KEYBOARD_DATA_PORT);
+    // If the scancode is 0xE0, then the next byte is an extended scancode
     if (scancode == CODE_EXTENDED) {
-        is_extended = 1;
+        // is_extended = 1;
         send_eoi(KEYBOARD_IRQ_NUM);
         sti();
         return;
     }
-    if (is_extended) { // we ignore extended for now
-        is_extended = 0;
-        send_eoi(KEYBOARD_IRQ_NUM);
-        sti();
-        return;
-    }
+    // if (is_extended) { // we ignore extended for now
+    //     is_extended = 0;
+    //     send_eoi(KEYBOARD_IRQ_NUM);
+    //     sti();
+    //     return;
+    // }
 
     // Keyboard should only ever be active on the currently shown terminal
     // Don't context switch, just fake it

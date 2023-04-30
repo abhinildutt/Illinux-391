@@ -449,7 +449,7 @@ int test_changing_rtc_freq() {
         }
 
         clear();
-        interrupt_counter = 0;
+        // interrupt_counter = 0;
     }  
 
     // Test bad buffer pointer to write

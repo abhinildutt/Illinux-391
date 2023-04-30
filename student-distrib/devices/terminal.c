@@ -68,6 +68,11 @@ void term_init() {
         terminals[i].keyboard_buffer_size = 0;
         terminals[i].curr_pid = -1;
 
+        terminals[i].rtc_enabled = 0;
+        terminals[i].rtc_freq = 0;
+        terminals[i].rtc_counter = 0;
+        terminals[i].rtc_flag = 0;
+
         backing_video_page = VIDEO_MEM_BACKGROUND_START_ADDR + i * PAGE_SIZE_4KB;
         for (j = 0; j < NUM_ROWS * NUM_COLS; j++) {
             *(uint8_t *)(backing_video_page + (j << 1)) = ' ';
@@ -179,6 +184,7 @@ void term_video_switch(uint8_t terminal_id) {
         (const void*) VIDEO_PERM_MEM_ADDR, PAGE_SIZE_4KB);
     curr_displaying_terminal_id = terminal_id;
 
+    // Previously background task is now being displayed, update paging accordingly
     map_program(curr_pid, curr_pcb->is_vidmapped, curr_pcb->terminal_id, curr_pcb->terminal_id == curr_displaying_terminal_id);
 
     // Copy target terminal background video memory to video memory

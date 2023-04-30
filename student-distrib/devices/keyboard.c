@@ -28,7 +28,7 @@ void keyboard_init() {
 #define KEYBOARD_HANDLER_PROLOGUE(original_terminal_id)        \
     original_terminal_id = curr_executing_terminal_id;         \
     curr_executing_terminal_id = curr_displaying_terminal_id;  \
-    video_mem = (char*) (VIDEO_PERM_MEM_ADDR);                 \
+    video_mem = (char*) VIDEO_PERM_MEM_ADDR;
 
 // Restore the original executing terminal context
 #define KEYBOARD_HANDLER_EPILOGUE(original_terminal_id)  \

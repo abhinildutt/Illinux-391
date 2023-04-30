@@ -5,12 +5,12 @@
 
 /* 
  * pit_init
-    *   DESCRIPTION: Initialize PIT by turning on IRQ
-    *  INPUTS: none
-    *  OUTPUTS: none
-    * RETURN VALUE: none
-    * SIDE EFFECTS: enables interrupts for IRQ 0 (pit)
-    */
+ *   DESCRIPTION: Initialize PIT by turning on IRQ
+ *   INPUTS: none
+ *   OUTPUTS: none
+ *   RETURN VALUE: none
+ *   SIDE EFFECTS: enables interrupts for IRQ 0 (pit)
+ */
 void pit_init() {
     cli();
     // Set the desired PIT mode
@@ -31,13 +31,13 @@ void pit_init() {
 }
 
 /* 
-* pit_handler
-    *   DESCRIPTION: Round robin scheduling for terminals
-    *  INPUTS: none
-    *  OUTPUTS: none
-    * RETURN VALUE: none
-    * SIDE EFFECTS: sends EOI and switches terminals
-    */
+ * pit_handler
+ *   DESCRIPTION: Round robin scheduling for terminals
+ *   INPUTS: none
+ *   OUTPUTS: none
+ *   RETURN VALUE: none
+ *   SIDE EFFECTS: sends EOI and switches terminals
+ */
 void pit_handler() {
     cli();
     // printf("PIT interrupt\n");

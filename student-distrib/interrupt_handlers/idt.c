@@ -30,7 +30,7 @@ void setup_idt() {
         idt[i].reserved4 = 0;                 // reserved
 
         // gate type
-        idt[i].reserved3 = (i < NUM_EXCEPTIONS) ? 1 : 0;  // trap gate if it's an exception, interrupt gate otherwise
+        idt[i].reserved3 = (i < NUM_EXCEPTIONS || i == SYSCALL_NUM) ? 1 : 0;  // trap gate if it's an exception / syscall, interrupt gate otherwise
         idt[i].reserved2 = 1;
         idt[i].reserved1 = 1;
         idt[i].size = 1;                      // 1 = 32 bit gate, 0 = 16 bit gate

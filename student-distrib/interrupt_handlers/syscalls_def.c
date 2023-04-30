@@ -280,13 +280,17 @@ int32_t execute(const uint8_t* command) {
     //             : "memory", "cc"
     //     );
     // } while (0);
-
+    // Forcible enable interrupts by modifying EFLAGS
+    // bit 9 = IF (interrupt enable flag)
     asm volatile(" \
         movw %%ax, %%ds      ;\
         pushl %%eax          ;\
         movl %%ebx, %%eax    ;\
         pushl %%eax          ;\
         pushfl               ;\
+        popl %%ebx           ;\
+        orl $0x200, %%ebx    ;\
+        pushl %%ebx          ;\
         pushl %%ecx          ;\
         pushl %%edx          ;\
         iret               "

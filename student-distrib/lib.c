@@ -239,7 +239,9 @@ void putc(uint8_t c) {
             }
             break;
     }
-    cursor_set(terminals[curr_executing_terminal_id].screen_x, terminals[curr_executing_terminal_id].screen_y);
+    if (curr_executing_terminal_id == curr_displaying_terminal_id) {
+        cursor_set(terminals[curr_executing_terminal_id].screen_x, terminals[curr_executing_terminal_id].screen_y);
+    }
 }
 
 /* int8_t* itoa(uint32_t value, int8_t* buf, int32_t radix);

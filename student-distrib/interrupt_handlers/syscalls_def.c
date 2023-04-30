@@ -152,7 +152,7 @@ int32_t execute(const uint8_t* command) {
         return -1;
     }
     file_arg[file_arg_length] = '\0';
-    printf("parsed cmd (filename=%s, args=%s, len=%d)\n", file_name, file_arg, file_name_length);
+    // printf("parsed cmd (filename=%s, args=%s, len=%d)\n", file_name, file_arg, file_name_length);
 
     // File header checks
     dentry_t syscall_dentry;
@@ -183,7 +183,7 @@ int32_t execute(const uint8_t* command) {
     // Get new PID
     int32_t new_pid = get_new_pid(); 
     if (new_pid == -1) {
-        printf("NO AVAILABLE PID's\n");
+        // printf("NO AVAILABLE PID's\n");
         sti();
         return -1;
     }
@@ -260,26 +260,45 @@ int32_t execute(const uint8_t* command) {
     curr_pid = new_pid;
     curr_pcb = pcb;
 
-    sti();
+    // sti();
 
     // printf("switch time\n");
     // PUSH before IRET for context switching
     // $0 = USER_DS, $1 = USER_ESP, $2 = USER_CS, $3 = prog_eip
     
     // OSDev wiki and hardware context switch DIAGRAM in mp3 appendix
+    // Bug: interrupts should be enabled in user process, but it's not rn
+    //      might have to modify flags directly
+    // uint32_t flags;
+    // do {
+    //     asm volatile ("          \
+    //             pushfl           ;\
+    //             popl %0          ;\
+    //             "                
+    //             : "=r"(flags)   
+    //             :               
+    //             : "memory", "cc"
+    //     );
+    // } while (0);
+    // Forcible enable interrupts by modifying EFLAGS
+    // bit 9 = IF (interrupt enable flag)
     asm volatile(" \
-        movw %%ax, %%ds    ;\
-        pushl %%eax        ;\
-        movl %%ebx, %%eax  ;\
-        pushl %%eax        ;\
-        pushfl             ;\
-        pushl %%ecx        ;\
-        pushl %%edx        ;\
+        movw %%ax, %%ds      ;\
+        pushl %%eax          ;\
+        movl %%ebx, %%eax    ;\
+        pushl %%eax          ;\
+        pushfl               ;\
+        popl %%ebx           ;\
+        orl $0x200, %%ebx    ;\
+        pushl %%ebx          ;\
+        pushl %%ecx          ;\
+        pushl %%edx          ;\
         iret               "
         :
         : "a"(USER_DS), "b"(pcb->esp) , "c"(USER_CS), "d"(pcb->eip)
         : "memory"
     );
+    sti();
     return 0;
 }
 

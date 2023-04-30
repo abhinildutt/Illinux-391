@@ -11,17 +11,14 @@
 
 #define KBUFFER_SIZE 128
 
-char kbuffer[KBUFFER_SIZE];
-uint32_t kbuffer_size;
-
-uint8_t is_extended;
+// uint8_t is_extended;
 uint8_t caps_lock_toggle;
 uint8_t caps_lock_active;
 uint8_t left_control_pressed;
 uint8_t right_control_pressed;
 uint8_t left_shift_pressed;
 uint8_t right_shift_pressed;
-uint8_t done_typing;
+uint8_t alt_pressed;
 
 extern void keyboard_init();
 extern void keyboard_handler();

@@ -5,7 +5,7 @@
 #include "filesystem/filesys_interface.h"
 
 #define MAX_FILE_COUNT 8
-#define MAX_PID_COUNT 3
+#define MAX_PID_COUNT 6
 #define FILE_NAME_LEN 32
 
 typedef struct pcb {
@@ -17,6 +17,8 @@ typedef struct pcb {
     uint32_t ebp;
     uint8_t file_arg[FILE_NAME_LEN];
     uint32_t active;
+    uint32_t terminal_id;
+    uint8_t is_vidmapped;
 } pcb_t;
 
 extern int32_t curr_pid;

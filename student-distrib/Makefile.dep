@@ -3,28 +3,29 @@ paging_call.o: paging_call.S
 x86_desc.o: x86_desc.S x86_desc.h types.h
 i8259.o: i8259.c i8259.h types.h lib.h
 kernel.o: kernel.c multiboot.h types.h x86_desc.h lib.h i8259.h debug.h \
-  tests.h paging.h task.h filesystem/filesys_interface.h \
+  tests.h paging.h address.h task.h filesystem/filesys_interface.h \
   filesystem/../types.h filesystem/filesys.h filesystem/../lib.h \
-  filesystem/filesys_interface.h devices/rtc.h devices/../lib.h \
-  devices/../filesystem/filesys_interface.h devices/keyboard.h \
-  devices/../i8259.h devices/terminal.h devices/../types.h \
+  filesystem/filesys_interface.h devices/pit.h devices/rtc.h \
+  devices/../lib.h devices/../filesystem/filesys_interface.h \
+  devices/keyboard.h devices/../i8259.h devices/terminal.h \
+  devices/../types.h devices/../devices/keyboard.h \
   interrupt_handlers/syscalls_def.h interrupt_handlers/../types.h
 lib.o: lib.c lib.h types.h devices/keyboard.h devices/../lib.h \
   devices/../i8259.h devices/../types.h devices/terminal.h \
   devices/../types.h devices/../filesystem/filesys_interface.h \
-  devices/../filesystem/../types.h
-paging.o: paging.c paging.h types.h
+  devices/../filesystem/../types.h devices/../devices/keyboard.h
+paging.o: paging.c paging.h types.h address.h lib.h
 task.o: task.c task.h types.h filesystem/filesys_interface.h \
-  filesystem/../types.h paging.h
+  filesystem/../types.h address.h
 tests.o: tests.c tests.h task.h types.h filesystem/filesys_interface.h \
-  filesystem/../types.h x86_desc.h lib.h paging.h \
+  filesystem/../types.h x86_desc.h lib.h paging.h address.h \
   interrupt_handlers/syscalls_def.h interrupt_handlers/../types.h \
   interrupt_handlers/exception.h interrupt_handlers/idt.h \
   filesystem/filesys.h filesystem/../lib.h filesystem/filesys_interface.h \
   devices/rtc.h devices/../lib.h \
   devices/../filesystem/filesys_interface.h devices/keyboard.h \
   devices/../i8259.h devices/../types.h devices/terminal.h \
-  devices/../types.h
+  devices/../types.h devices/../devices/keyboard.h
 device_handlers.o: interrupt_handlers/device_handlers.S
 exceptions_def.o: interrupt_handlers/exceptions_def.S
 syscall.o: interrupt_handlers/syscall.S
@@ -32,14 +33,29 @@ keyboard.o: devices/keyboard.c devices/keyboard.h devices/../lib.h \
   devices/../types.h devices/../i8259.h devices/keyboard_scancodes.h \
   devices/terminal.h devices/../types.h \
   devices/../filesystem/filesys_interface.h \
-  devices/../filesystem/../types.h
+  devices/../filesystem/../types.h devices/../devices/keyboard.h \
+  devices/../address.h
+pit.o: devices/pit.c devices/pit.h devices/../lib.h devices/../types.h \
+  devices/../i8259.h devices/../devices/terminal.h \
+  devices/../devices/../lib.h devices/../devices/../types.h \
+  devices/../devices/../filesystem/filesys_interface.h \
+  devices/../devices/../filesystem/../types.h \
+  devices/../devices/../devices/keyboard.h \
+  devices/../devices/../devices/../lib.h \
+  devices/../devices/../devices/../i8259.h
 rtc.o: devices/rtc.c devices/rtc.h devices/../lib.h devices/../types.h \
   devices/../filesystem/filesys_interface.h \
   devices/../filesystem/../types.h devices/../i8259.h
 terminal.o: devices/terminal.c devices/terminal.h devices/../lib.h \
   devices/../types.h devices/../types.h \
   devices/../filesystem/filesys_interface.h \
-  devices/../filesystem/../types.h devices/keyboard.h devices/../i8259.h
+  devices/../filesystem/../types.h devices/../devices/keyboard.h \
+  devices/../devices/../lib.h devices/../devices/../i8259.h \
+  devices/../devices/../types.h devices/keyboard.h devices/../address.h \
+  devices/../task.h devices/../filesystem/filesys_interface.h \
+  devices/../paging.h devices/../address.h \
+  devices/../interrupt_handlers/syscalls_def.h \
+  devices/../interrupt_handlers/../types.h devices/../x86_desc.h
 filesys.o: filesystem/filesys.c filesystem/filesys.h \
   filesystem/../types.h filesystem/../lib.h filesystem/../types.h \
   filesystem/filesys_interface.h \
@@ -52,7 +68,11 @@ filesys_interface.o: filesystem/filesys_interface.c filesystem/../task.h \
   filesystem/../devices/../filesystem/filesys_interface.h \
   filesystem/filesys.h filesystem/../types.h filesystem/../lib.h \
   filesystem/filesys_interface.h filesystem/../devices/terminal.h \
-  filesystem/../devices/../types.h
+  filesystem/../devices/../types.h \
+  filesystem/../devices/../devices/keyboard.h \
+  filesystem/../devices/../devices/../lib.h \
+  filesystem/../devices/../devices/../i8259.h \
+  filesystem/../devices/../devices/../types.h
 exception.o: interrupt_handlers/exception.c \
   interrupt_handlers/exception.h interrupt_handlers/../lib.h \
   interrupt_handlers/../types.h interrupt_handlers/syscalls_def.h \
@@ -61,7 +81,7 @@ idt.o: interrupt_handlers/idt.c interrupt_handlers/idt.h \
   interrupt_handlers/../x86_desc.h interrupt_handlers/../types.h \
   interrupt_handlers/exceptions_def.h interrupt_handlers/exception.h \
   interrupt_handlers/syscall.h interrupt_handlers/device_handlers.h \
-  interrupt_handlers/../devices/rtc.h \
+  interrupt_handlers/../devices/pit.h interrupt_handlers/../devices/rtc.h \
   interrupt_handlers/../devices/../lib.h \
   interrupt_handlers/../devices/../types.h \
   interrupt_handlers/../devices/../filesystem/filesys_interface.h \
@@ -84,4 +104,6 @@ syscalls_def.o: interrupt_handlers/syscalls_def.c \
   interrupt_handlers/../devices/../i8259.h \
   interrupt_handlers/../devices/../types.h \
   interrupt_handlers/../devices/terminal.h \
-  interrupt_handlers/../devices/../types.h interrupt_handlers/../paging.h
+  interrupt_handlers/../devices/../types.h \
+  interrupt_handlers/../devices/../devices/keyboard.h \
+  interrupt_handlers/../paging.h interrupt_handlers/../address.h

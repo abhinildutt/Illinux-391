@@ -4,6 +4,7 @@
 #include "exception.h"
 #include "syscall.h"
 #include "device_handlers.h"
+#include "../devices/pit.h"
 #include "../devices/rtc.h"
 #include "../devices/keyboard.h"
 
@@ -29,7 +30,7 @@ void setup_idt() {
         idt[i].reserved4 = 0;                 // reserved
 
         // gate type
-        idt[i].reserved3 = (i < NUM_EXCEPTIONS) ? 1 : 0;  // trap gate if it's an exception, interrupt gate otherwise
+        idt[i].reserved3 = (i < NUM_EXCEPTIONS || i == SYSCALL_NUM) ? 1 : 0;  // trap gate if it's an exception / syscall, interrupt gate otherwise
         idt[i].reserved2 = 1;
         idt[i].reserved1 = 1;
         idt[i].size = 1;                      // 1 = 32 bit gate, 0 = 16 bit gate
@@ -68,6 +69,7 @@ void setup_idt() {
     // idt[31] is reserved
     
     // put hardware interrupt handlers in IDT
+    SET_IDT_ENTRY(idt[PIC_BASE_NUM + PIT_IRQ_NUM], pit_interrupt);
     SET_IDT_ENTRY(idt[PIC_BASE_NUM + KEYBOARD_IRQ_NUM], keyboard_interrupt);
     SET_IDT_ENTRY(idt[PIC_BASE_NUM + RTC_IRQ_NUM], rtc_interrupt);
 
